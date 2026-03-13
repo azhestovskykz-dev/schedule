@@ -1,0 +1,57 @@
+:root {
+    --bg-color: #f4f7f6;
+    --text-color: #333;
+    --header-bg: #4a90e2;
+    --header-text: #fff;
+    --grid-border: #e0e0e0;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+}
+
+#app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+header {
+    background-color: var(--header-bg);
+    color: var(--header-text);
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+header button {
+    background-color: rgba(255,255,255,0.2);
+    border: none;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+header button:hover {
+    background-color: rgba(255,255,255,0.3);
+}
+
+#scheduleGrid {
+    flex: 1;
+    overflow: auto;
+    padding: 1rem;
+    display: grid;
+    /* Разметка будет улучшена позже */
+}
