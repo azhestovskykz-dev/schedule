@@ -73,9 +73,12 @@ document.addEventListener('DOMContentLoaded', () => {
         activeSchedule: JSON.parse(localStorage.getItem('schedule_active')) || initialSchedule,
         draftSchedule: JSON.parse(localStorage.getItem('schedule_draft')) || JSON.parse(JSON.stringify(initialSchedule)),
         sleepLogs: JSON.parse(localStorage.getItem('sleepLogs')) || [],
-        currentVersion: 'active', // 'active' или 'draft'
-        editMode: true
+        currentVersion: localStorage.getItem('currentVersion') || 'active', 
+        editMode: localStorage.getItem('editMode') !== 'false' // default to true
     };
+
+    // Применяем начальные стили на основе сохраненного режима
+    document.body.classList.toggle('view-mode', !state.editMode);
 
     // Геттер для получения текущего расписания в зависимости от версии
     function getCurrentSchedule() {
@@ -99,11 +102,31 @@ document.addEventListener('DOMContentLoaded', () => {
     const draftTab = document.getElementById('draftTab');
     const subjectBreakdown = document.getElementById('subjectBreakdown');
 
+    // Модальные окна
+    const modalOverlay = document.getElementById('modalOverlay');
+    const editIdInput = document.getElementById('editId');
+    const subjectInput = document.getElementById('subjectInput');
+    const phoneInput = document.getElementById('phoneInput');
+    const durationInput = document.getElementById('durationInput');
+    const colorInput = document.getElementById('colorInput');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const scheduleForm = document.getElementById('scheduleForm');
+
+    // Элементы учителей
+    const teachersModal = document.getElementById('teachersModal');
+    const teachersList = document.getElementById('teachersList');
+    const closeTeachersBtn = document.getElementById('closeTeachersBtn');
+    const teacherEditModal = document.getElementById('teacherEditModal');
+    const teacherForm = document.getElementById('teacherForm');
+    const cancelTeacherEdit = document.getElementById('cancelTeacherEdit');
+
     function saveState() {
         localStorage.setItem('teachers', JSON.stringify(state.teachers));
         localStorage.setItem('schedule_active', JSON.stringify(state.activeSchedule));
         localStorage.setItem('schedule_draft', JSON.stringify(state.draftSchedule));
         localStorage.setItem('sleepLogs', JSON.stringify(state.sleepLogs));
+        localStorage.setItem('currentVersion', state.currentVersion);
+        localStorage.setItem('editMode', state.editMode);
         renderStats();
     }
 
@@ -297,10 +320,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Управление режимами и версиями
+    modeToggle.checked = state.editMode;
+    modeLabel.textContent = state.editMode ? 'Редактирование' : 'Просмотр';
+    
+    if (state.currentVersion === 'draft') {
+        draftTab.classList.add('active');
+        activeTab.classList.remove('active');
+    }
+
     modeToggle.addEventListener('change', () => {
         state.editMode = modeToggle.checked;
         modeLabel.textContent = state.editMode ? 'Редактирование' : 'Просмотр';
         document.body.classList.toggle('view-mode', !state.editMode);
+        saveState();
         renderGrid();
     });
 
@@ -308,16 +340,16 @@ document.addEventListener('DOMContentLoaded', () => {
         state.currentVersion = 'active';
         activeTab.classList.add('active');
         draftTab.classList.remove('active');
+        saveState();
         renderGrid();
-        renderStats();
     });
 
     draftTab.addEventListener('click', () => {
         state.currentVersion = 'draft';
         draftTab.classList.add('active');
         activeTab.classList.remove('active');
+        saveState();
         renderGrid();
-        renderStats();
     });
 
     manageTeachersBtn.addEventListener('click', () => {
