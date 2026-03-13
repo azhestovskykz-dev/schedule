@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     // Состояние приложения
     let state = {
-        teachers: JSON.parse(localStorage.getItem('teachers')) || [],
+        teachers: JSON.parse(localStorage.getItem('teachers')) || {}, // { phone: color }
         schedule: JSON.parse(localStorage.getItem('schedule')) || [],
         sleepLogs: JSON.parse(localStorage.getItem('sleepLogs')) || []
     };
@@ -24,7 +24,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const studyMinutes = state.schedule.reduce((acc, item) => acc + (parseInt(item.duration) || 0), 0);
         document.getElementById('studyTime').textContent = `Учеба: ${Math.round(studyMinutes / 60 * 10) / 10} ч`;
         
-        // Примерный расчет отдыха (упрощенно)
         const totalDayMinutes = 14 * 60; // 07:00 - 21:00
         const restMinutes = totalDayMinutes - studyMinutes;
         document.getElementById('restTime').textContent = `Отдых: ${Math.round(restMinutes / 60 * 10) / 10} ч`;
@@ -71,6 +70,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="block-duration">${item.duration} мин</div>
                     `;
                     
+                    // Клик по блоку: Редактирование
+                    block.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        editScheduleItem(item.id);
+                    });
+
                     // Удаление
                     block.querySelector('.delete-btn').addEventListener('click', (e) => {
                         e.stopPropagation();
@@ -92,24 +97,32 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    function getTeacherColor(phone) {
+        if (!phone) return '#0984e3';
+        if (state.teachers[phone]) return state.teachers[phone];
+        
+        const colors = ['#0984e3', '#6c5ce7', '#00cec9', '#fab1a0', '#ffeaa7', '#fdcb6e', '#e17055'];
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        state.teachers[phone] = color;
+        return color;
+    }
+
     function addScheduleItem(day, hour) {
         const subject = prompt('Название предмета:');
         if (!subject) return;
+        const phone = prompt('Телефон преподавателя:');
+        const duration = prompt('Длительность (мин):', '60');
         
-        const phone = prompt('Телефон или Имя преподавателя:');
-        const duration = prompt('Длительность в минутах:', '60');
-        
-        const colors = ['#084e3', '#6c5ce7', '#00cec9', '#fab1a0', '#ffeaa7'];
-        const randomColor = colors[Math.floor(Math.random() * colors.length)];
+        const color = getTeacherColor(phone);
         
         const newItem = {
-            id: Date.now(),
+            id: Date.now().toString(),
             day,
             hour,
             subject,
             phone,
             duration: parseInt(duration) || 60,
-            color: randomColor
+            color
         };
 
         state.schedule.push(newItem);
@@ -117,18 +130,37 @@ document.addEventListener('DOMContentLoaded', () => {
         renderGrid();
     }
 
+    function editScheduleItem(id) {
+        const item = state.schedule.find(i => i.id === id);
+        if (!item) return;
+
+        const newSubject = prompt('Новое название предмета:', item.subject);
+        if (newSubject === null) return;
+        
+        const newPhone = prompt('Новый телефон:', item.phone);
+        const newDuration = prompt('Новая длительность (мин):', item.duration);
+        
+        item.subject = newSubject;
+        item.phone = newPhone;
+        item.duration = parseInt(newDuration) || 60;
+        item.color = getTeacherColor(newPhone);
+
+        saveState();
+        renderGrid();
+    }
+
     manageTeachersBtn.addEventListener('click', () => {
-        alert('Список учителей (по телефонам):\n' + 
-            (state.schedule.map(s => s.phone).filter((v, i, a) => v && a.indexOf(v) === i).join('\n') || 'Пока нет учителей'));
+        const list = Object.entries(state.teachers).map(([p, c]) => `${p}`).join('\n');
+        alert('Список учителей в базе:\n' + (list || 'Пусто'));
     });
 
     logSleepBtn.addEventListener('click', () => {
-        const sleep = prompt('Во сколько ребенок лег спать? (например, 22:00)');
-        const wake = prompt('Во сколько ребенок проснулся? (например, 07:00)');
+        const sleep = prompt('Время отхода ко сну (ЧЧ:ММ):');
+        const wake = prompt('Время пробуждения (ЧЧ:ММ):');
         if (sleep && wake) {
             state.sleepLogs.push({ date: new Date().toLocaleDateString(), sleep, wake });
             saveState();
-            alert('Данные о сне сохранены!');
+            alert('Журнал обновлен!');
         }
     });
 
