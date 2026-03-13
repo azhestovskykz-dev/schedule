@@ -100,8 +100,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const studyMinutes = state.schedule.reduce((acc, item) => acc + (parseInt(item.duration) || 0), 0);
         document.getElementById('studyTime').textContent = `Учеба: ${Math.round(studyMinutes / 60 * 10) / 10} ч`;
         
-        const totalDayMinutes = 14 * 60; // 07:00 - 21:00
-        const restMinutes = totalDayMinutes - studyMinutes;
+        // Всего доступных часов в неделю (7 дней по 14 часов: 7:00 - 21:00)
+        const totalWeeklyMinutes = 7 * 14 * 60; 
+        const restMinutes = totalWeeklyMinutes - studyMinutes;
         document.getElementById('restTime').textContent = `Отдых: ${Math.round(restMinutes / 60 * 10) / 10} ч`;
     }
 
