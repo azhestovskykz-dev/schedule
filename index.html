@@ -29,26 +29,27 @@
             </div>
         </header>
 
-        <main class="container">
-            <div id="scheduleGrid" class="schedule-grid"></div>
+        <main class="main-content">
+            <div id="scheduleGrid" class="schedule-grid">
+                <!-- Сетка расписания будет генерироваться через JS -->
+            </div>
             
-            <!-- Расширенная аналитика под сеткой -->
             <section class="analytics-section">
                 <div class="analytics-header">
                     <h2>Аналитика времени</h2>
                     <div class="global-stats">
                         <div class="stat-card main">
                             <span class="stat-label">Всего учебы</span>
-                            <span id="studyTime" class="stat-value">0 ч</span>
+                            <span id="studyTimeText" class="stat-value">0 ч</span>
                         </div>
                         <div class="stat-card main">
                             <span class="stat-label">Свободное время</span>
-                            <span id="restTime" class="stat-value">0 ч</span>
+                            <span id="restTimeText" class="stat-value">0 ч</span>
                         </div>
                     </div>
                 </div>
-                <div id="subjectBreakdown" class="subject-breakdown">
-                    <!-- Карточки предметов будут здесь -->
+                <div id="subjectBreakdownArea" class="subject-breakdown">
+                    <!-- Карточки предметов появятся здесь -->
                 </div>
             </section>
         </main>
