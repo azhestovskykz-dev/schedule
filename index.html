@@ -9,19 +9,48 @@
 <body>
     <div id="app">
         <header>
-            <h1>Мое Расписание</h1>
-            <div class="stats">
-                <span id="studyTime">Учеба: 0 ч</span>
-                <span id="restTime">Отдых: 0 ч</span>
-            </div>
-            <div class="controls">
-                <button id="manageTeachersBtn">Учителя</button>
-                <button id="logSleepBtn">Сон</button>
+            <div class="logo">📅 Мое Расписание</div>
+            <div class="header-controls">
+                <div class="version-tabs">
+                    <button id="activeTab" class="tab-btn active">Текущее</button>
+                    <button id="draftTab" class="tab-btn">Черновик</button>
+                </div>
+                <div class="mode-toggle">
+                    <label class="switch">
+                        <input type="checkbox" id="modeToggle" checked>
+                        <span class="slider round"></span>
+                    </label>
+                    <span id="modeLabel">Редактирование</span>
+                </div>
+                <div class="header-actions">
+                    <button id="manageTeachersBtn" class="primary-btn">Учителя</button>
+                    <button id="logSleepBtn" class="secondary-btn">Сон</button>
+                </div>
             </div>
         </header>
 
-        <main id="scheduleGrid" class="schedule-grid">
-            <!-- Сетка расписания будет генерироваться через JS -->
+        <main class="container">
+            <div id="scheduleGrid" class="schedule-grid"></div>
+            
+            <!-- Расширенная аналитика под сеткой -->
+            <section class="analytics-section">
+                <div class="analytics-header">
+                    <h2>Аналитика времени</h2>
+                    <div class="global-stats">
+                        <div class="stat-card main">
+                            <span class="stat-label">Всего учебы</span>
+                            <span id="studyTime" class="stat-value">0 ч</span>
+                        </div>
+                        <div class="stat-card main">
+                            <span class="stat-label">Свободное время</span>
+                            <span id="restTime" class="stat-value">0 ч</span>
+                        </div>
+                    </div>
+                </div>
+                <div id="subjectBreakdown" class="subject-breakdown">
+                    <!-- Карточки предметов будут здесь -->
+                </div>
+            </section>
         </main>
     </div>
 

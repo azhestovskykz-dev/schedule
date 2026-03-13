@@ -43,23 +43,104 @@ header h1 {
     letter-spacing: -0.5px;
 }
 
-.stats {
+.header-controls {
     display: flex;
-    gap: 20px;
-    background: rgba(255,255,255,0.1);
-    padding: 10px 20px;
-    border-radius: 50px;
-    backdrop-filter: blur(5px);
+    align-items: center;
+    gap: 1.5rem;
 }
 
-.stats span {
+.version-tabs {
+    display: flex;
+    background: rgba(255,255,255,0.2);
+    padding: 4px;
+    border-radius: 12px;
+}
+
+.tab-btn {
+    padding: 8px 16px;
+    border: none;
+    background: none;
+    color: white;
+    cursor: pointer;
+    border-radius: 8px;
     font-weight: 600;
-    font-size: 0.95rem;
+    transition: all 0.2s;
 }
 
-.controls {
+.tab-btn.active {
+    background: white;
+    color: var(--header-bg);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.mode-toggle {
     display: flex;
-    gap: 12px;
+    align-items: center;
+    gap: 10px;
+    color: white;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.header-actions {
+    display: flex;
+    gap: 0.8rem;
+}
+
+/* Switch Styles */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+}
+
+.switch input { 
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255,255,255,0.3);
+  transition: .4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: .4s;
+}
+
+input:checked + .slider {
+  background-color: #00b894;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #00b894;
+}
+
+input:checked + .slider:before {
+  transform: translateX(26px);
+}
+
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
 }
 
 header button {
@@ -340,10 +421,85 @@ select {
     font-size: 1rem;
     background: white;
 }
-/* Мобильная адаптация */
-@media (max-width: 800px) {
-    #scheduleGrid {
-        grid-template-columns: 50px repeat(7, 120px) !important;
-    }
-    header { padding: 1rem; flex-direction: column; gap: 15px; text-align: center; }
+/* Аналитика */
+.analytics-section {
+    margin: 2rem;
+    padding: 2rem;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+}
+
+.analytics-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 1rem;
+}
+
+.global-stats {
+    display: flex;
+    gap: 1rem;
+}
+
+.stat-card.main {
+    background: var(--header-bg);
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    min-width: 150px;
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    opacity: 0.9;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 800;
+}
+
+.subject-breakdown {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 1rem;
+}
+
+.subject-card {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 12px;
+    border-left: 4px solid #ddd;
+    display: flex;
+    flex-direction: column;
+}
+
+.subject-name {
+    font-weight: 700;
+    color: #2d3436;
+}
+
+.subject-hours {
+    font-size: 1.1rem;
+    color: #636e72;
+    margin-top: 4px;
+}
+
+/* Вид в режиме просмотра */
+body.view-mode .delete-btn,
+body.view-mode #logSleepBtn,
+body.view-mode #manageTeachersBtn,
+body.view-mode .version-tabs {
+    display: none !important;
+}
+
+body.view-mode .schedule-block {
+    cursor: default;
 }

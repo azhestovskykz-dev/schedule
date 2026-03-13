@@ -69,10 +69,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Состояние приложения
     let state = {
-        teachers: JSON.parse(localStorage.getItem('teachers')) || {}, // { phone: color }
-        schedule: JSON.parse(localStorage.getItem('schedule')) || initialSchedule,
-        sleepLogs: JSON.parse(localStorage.getItem('sleepLogs')) || []
+        teachers: JSON.parse(localStorage.getItem('teachers')) || {},
+        activeSchedule: JSON.parse(localStorage.getItem('schedule_active')) || initialSchedule,
+        draftSchedule: JSON.parse(localStorage.getItem('schedule_draft')) || JSON.parse(JSON.stringify(initialSchedule)),
+        sleepLogs: JSON.parse(localStorage.getItem('sleepLogs')) || [],
+        currentVersion: 'active', // 'active' или 'draft'
+        editMode: true
     };
+
+    // Геттер для получения текущего расписания в зависимости от версии
+    function getCurrentSchedule() {
+        return state.currentVersion === 'active' ? state.activeSchedule : state.draftSchedule;
+    }
+
+    function setCurrentSchedule(data) {
+        if (state.currentVersion === 'active') state.activeSchedule = data;
+        else state.draftSchedule = data;
+    }
 
     const days = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
     const hours = Array.from({ length: 14 }, (_, i) => i + 7); // 07:00 - 20:00
@@ -80,30 +93,47 @@ document.addEventListener('DOMContentLoaded', () => {
     const grid = document.getElementById('scheduleGrid');
     const manageTeachersBtn = document.getElementById('manageTeachersBtn');
     const logSleepBtn = document.getElementById('logSleepBtn');
-
-    // Элементы учителей
-    const teachersModal = document.getElementById('teachersModal');
-    const teachersList = document.getElementById('teachersList');
-    const closeTeachersBtn = document.getElementById('closeTeachersBtn');
-    const teacherEditModal = document.getElementById('teacherEditModal');
-    const teacherForm = document.getElementById('teacherForm');
-    const cancelTeacherEdit = document.getElementById('cancelTeacherEdit');
+    const modeToggle = document.getElementById('modeToggle');
+    const modeLabel = document.getElementById('modeLabel');
+    const activeTab = document.getElementById('activeTab');
+    const draftTab = document.getElementById('draftTab');
+    const subjectBreakdown = document.getElementById('subjectBreakdown');
 
     function saveState() {
         localStorage.setItem('teachers', JSON.stringify(state.teachers));
-        localStorage.setItem('schedule', JSON.stringify(state.schedule));
+        localStorage.setItem('schedule_active', JSON.stringify(state.activeSchedule));
+        localStorage.setItem('schedule_draft', JSON.stringify(state.draftSchedule));
         localStorage.setItem('sleepLogs', JSON.stringify(state.sleepLogs));
         renderStats();
     }
 
     function renderStats() {
-        const studyMinutes = state.schedule.reduce((acc, item) => acc + (parseInt(item.duration) || 0), 0);
-        document.getElementById('studyTime').textContent = `Учеба: ${Math.round(studyMinutes / 60 * 10) / 10} ч`;
+        const schedule = getCurrentSchedule();
+        const studyMinutes = schedule.reduce((acc, item) => acc + (parseInt(item.duration) || 0), 0);
+        document.getElementById('studyTime').textContent = `${Math.round(studyMinutes / 60 * 10) / 10} ч`;
         
-        // Всего доступных часов в неделю (7 дней по 14 часов: 7:00 - 21:00)
         const totalWeeklyMinutes = 7 * 14 * 60; 
         const restMinutes = totalWeeklyMinutes - studyMinutes;
-        document.getElementById('restTime').textContent = `Отдых: ${Math.round(restMinutes / 60 * 10) / 10} ч`;
+        document.getElementById('restTime').textContent = `${Math.round(restMinutes / 60 * 10) / 10} ч`;
+
+        // Детальная аналитика по предметам
+        const summary = {};
+        schedule.forEach(item => {
+            if (!summary[item.subject]) summary[item.subject] = { min: 0, color: item.color };
+            summary[item.subject].min += parseInt(item.duration) || 0;
+        });
+
+        subjectBreakdown.innerHTML = '';
+        Object.entries(summary).sort((a,b) => b[1].min - a[1].min).forEach(([name, data]) => {
+            const card = document.createElement('div');
+            card.className = 'subject-card';
+            card.style.borderLeftColor = data.color;
+            card.innerHTML = `
+                <span class="subject-name">${name}</span>
+                <span class="subject-hours">${Math.round(data.min / 60 * 10) / 10} ч <small>(${data.min} мин)</small></span>
+            `;
+            subjectBreakdown.appendChild(card);
+        });
     }
 
     function renderGrid() {
@@ -133,62 +163,69 @@ document.addEventListener('DOMContentLoaded', () => {
                 cell.dataset.day = dayIndex;
                 cell.dataset.hour = hour;
                 
-                cell.addEventListener('dragover', (e) => {
-                    e.preventDefault();
-                    cell.classList.add('drag-over');
-                });
-                cell.addEventListener('dragleave', () => cell.classList.remove('drag-over'));
-                cell.addEventListener('drop', (e) => {
-                    e.preventDefault();
-                    cell.classList.remove('drag-over');
-                    const itemId = e.dataTransfer.getData('text/plain');
-                    const item = state.schedule.find(i => i.id === itemId);
-                    if (item) {
-                        item.day = parseInt(cell.dataset.day);
-                        item.hour = parseInt(cell.dataset.hour);
-                        saveState();
-                        renderGrid();
-                    }
-                });
+                if (state.editMode) {
+                    cell.addEventListener('dragover', (e) => {
+                        e.preventDefault();
+                        cell.classList.add('drag-over');
+                    });
+                    cell.addEventListener('dragleave', () => cell.classList.remove('drag-over'));
+                    cell.addEventListener('drop', (e) => {
+                        e.preventDefault();
+                        cell.classList.remove('drag-over');
+                        const itemId = e.dataTransfer.getData('text/plain');
+                        const schedule = getCurrentSchedule();
+                        const item = schedule.find(i => i.id === itemId);
+                        if (item) {
+                            item.day = parseInt(cell.dataset.day);
+                            item.hour = parseInt(cell.dataset.hour);
+                            saveState();
+                            renderGrid();
+                        }
+                    });
+                }
                 
-                const items = state.schedule.filter(i => i.day == dayIndex && i.hour == hour);
+                const schedule = getCurrentSchedule();
+                const items = schedule.filter(i => i.day == dayIndex && i.hour == hour);
                 items.forEach(item => {
                     const block = document.createElement('div');
                     block.className = 'schedule-block';
-                    block.draggable = true;
+                    block.draggable = state.editMode;
                     block.style.borderLeftColor = item.color || '#0984e3';
                     block.innerHTML = `
-                        <div class="block-actions">
-                            <span class="delete-btn" title="Удалить">×</span>
-                        </div>
+                        ${state.editMode ? `<div class="block-actions"><span class="delete-btn" title="Удалить">×</span></div>` : ''}
                         <div class="block-phone">${item.phone || 'Нет тел.'}</div>
                         <div class="block-subject">${item.subject || 'Занятие'}</div>
                         <div class="block-duration">${item.duration} мин</div>
                     `;
                     
-                    block.addEventListener('dragstart', (e) => {
-                        e.dataTransfer.setData('text/plain', item.id);
-                        setTimeout(() => block.style.display = 'none', 0);
-                    });
-                    block.addEventListener('dragend', () => block.style.display = 'block');
-                    block.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        openModal(item);
-                    });
-                    block.querySelector('.delete-btn').addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        if (confirm('Удалить это занятие?')) {
-                            state.schedule = state.schedule.filter(i => i.id !== item.id);
-                            saveState();
-                            renderGrid();
-                        }
-                    });
+                    if (state.editMode) {
+                        block.addEventListener('dragstart', (e) => {
+                            e.dataTransfer.setData('text/plain', item.id);
+                            setTimeout(() => block.style.display = 'none', 0);
+                        });
+                        block.addEventListener('dragend', () => block.style.display = 'block');
+                        block.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            openModal(item);
+                        });
+                        block.querySelector('.delete-btn').addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            if (confirm('Удалить это занятие?')) {
+                                const newSchedule = getCurrentSchedule().filter(i => i.id !== item.id);
+                                setCurrentSchedule(newSchedule);
+                                saveState();
+                                renderGrid();
+                            }
+                        });
+                    }
                     cell.appendChild(block);
                 });
 
-                cell.addEventListener('click', (e) => {
-                    if (e.target === cell) openModal(null, dayIndex, hour);
-                });
+                if (state.editMode) {
+                    cell.addEventListener('click', (e) => {
+                        if (e.target === cell) openModal(null, dayIndex, hour);
+                    });
+                }
                 grid.appendChild(cell);
             });
         });
@@ -236,8 +273,9 @@ document.addEventListener('DOMContentLoaded', () => {
             color: colorInput.value
         };
 
+        const schedule = getCurrentSchedule();
         if (id) {
-            const item = state.schedule.find(i => i.id === id);
+            const item = schedule.find(i => i.id === id);
             if (item) Object.assign(item, data);
         } else {
             const newItem = {
@@ -246,10 +284,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 hour: parseInt(editIdInput.dataset.newHour),
                 ...data
             };
-            state.schedule.push(newItem);
+            schedule.push(newItem);
         }
 
-        // Авто-создание учителя если нет
         if (phone && !state.teachers[phone]) {
             state.teachers[phone] = { color: data.color };
         }
@@ -259,6 +296,30 @@ document.addEventListener('DOMContentLoaded', () => {
         closeModal();
     });
 
+    // Управление режимами и версиями
+    modeToggle.addEventListener('change', () => {
+        state.editMode = modeToggle.checked;
+        modeLabel.textContent = state.editMode ? 'Редактирование' : 'Просмотр';
+        document.body.classList.toggle('view-mode', !state.editMode);
+        renderGrid();
+    });
+
+    activeTab.addEventListener('click', () => {
+        state.currentVersion = 'active';
+        activeTab.classList.add('active');
+        draftTab.classList.remove('active');
+        renderGrid();
+        renderStats();
+    });
+
+    draftTab.addEventListener('click', () => {
+        state.currentVersion = 'draft';
+        draftTab.classList.add('active');
+        activeTab.classList.remove('active');
+        renderGrid();
+        renderStats();
+    });
+
     manageTeachersBtn.addEventListener('click', () => {
         renderTeachers();
         teachersModal.classList.add('active');
@@ -266,7 +327,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderTeachers() {
         teachersList.innerHTML = '';
-        const uniquePhones = [...new Set(state.schedule.map(s => s.phone).filter(p => p && !p.startsWith('в ')))];
+        const schedule = getCurrentSchedule();
+        const uniquePhones = [...new Set(schedule.map(s => s.phone).filter(p => p && !p.startsWith('в ')))];
         
         uniquePhones.forEach(phone => {
             const teacher = state.teachers[phone] || { status: 'active' };
