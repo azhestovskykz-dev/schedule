@@ -20,9 +20,80 @@
             </div>
         </header>
 
-        <main id="scheduleGrid">
+        <main id="scheduleGrid" class="schedule-grid">
             <!-- Сетка расписания будет генерироваться через JS -->
         </main>
+    </div>
+
+    <!-- Модальное окно редактирования занятия -->
+    <div id="modalOverlay" class="modal-overlay">
+        <div class="modal-content">
+            <h2 id="modalTitle">Занятие</h2>
+            <form id="scheduleForm">
+                <input type="hidden" id="editId">
+                <div class="form-group">
+                    <label for="subjectInput">Предмет:</label>
+                    <input type="text" id="subjectInput" required>
+                </div>
+                <div class="form-group">
+                    <label for="phoneInput">Телефон / Учитель:</label>
+                    <input type="text" id="phoneInput">
+                </div>
+                <div class="form-group">
+                    <label for="durationInput">Длительность (мин):</label>
+                    <input type="number" id="durationInput" value="60">
+                </div>
+                <div class="form-group">
+                    <label for="colorInput">Цвет блока:</label>
+                    <input type="color" id="colorInput" value="#0984e3">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" id="closeModalBtn" class="secondary-btn">Отмена</button>
+                    <button type="submit" class="primary-btn">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модальное окно управления учителями -->
+    <div id="teachersModal" class="modal-overlay">
+        <div class="modal-content wide">
+            <h2>Настройка учителей</h2>
+            <div id="teachersList" class="teachers-list"></div>
+            <div class="modal-actions">
+                <button type="button" id="closeTeachersBtn" class="secondary-btn">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно редактирования учителя -->
+    <div id="teacherEditModal" class="modal-overlay">
+        <div class="modal-content">
+            <h2>Реквизиты учителя</h2>
+            <form id="teacherForm">
+                <input type="hidden" id="editTeacherPhone">
+                <div class="form-group">
+                    <label for="teacherBank">Банк:</label>
+                    <input type="text" id="teacherBank" placeholder="Например, Тинькофф">
+                </div>
+                <div class="form-group">
+                    <label for="teacherCard">Номер карты:</label>
+                    <input type="text" id="teacherCard" placeholder="0000 0000 0000 0000">
+                </div>
+                <div class="form-group">
+                    <label for="teacherStatus">Статус:</label>
+                    <select id="teacherStatus">
+                        <option value="active">Активен</option>
+                        <option value="inactive">Неактивен</option>
+                        <option value="temporary">Временно недоступен</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" id="cancelTeacherEdit" class="secondary-btn">Отмена</button>
+                    <button type="submit" class="primary-btn">Сохранить</button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <script src="app.js"></script>
