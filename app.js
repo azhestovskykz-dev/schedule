@@ -1,63 +1,88 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Начальные данные со скриншота
+    // Цветовая карта предметов (из скриншота)
+    const SUBJECT_COLORS = {
+        'Английский':   { bg: '#fff9c4', border: '#f9a825', text: '#5d4037' },
+        'Математика':   { bg: '#ffe0b2', border: '#e65100', text: '#4e342e' },
+        'Логопед':      { bg: '#c8e6c9', border: '#388e3c', text: '#1b5e20' },
+        'Калиграф':     { bg: '#e1bee7', border: '#8e24aa', text: '#4a148c' },
+        'Калиграфия':   { bg: '#e1bee7', border: '#8e24aa', text: '#4a148c' },
+        'Скорочтение':  { bg: '#b2ebf2', border: '#00838f', text: '#004d40' },
+        'Русский':      { bg: '#b2ebf2', border: '#0097a7', text: '#004d40' },
+        'Речь':         { bg: '#fff9c4', border: '#c0ca33', text: '#33691e' },
+        'Баскетбол':    { bg: '#ffcdd2', border: '#c62828', text: '#b71c1c' },
+        'Волейбол':     { bg: '#f8bbd0', border: '#ad1457', text: '#880e4f' },
+        'Бассейн':      { bg: '#bbdefb', border: '#1565c0', text: '#0d47a1' },
+        'Айкидо':       { bg: '#b2ebf2', border: '#00695c', text: '#004d40' },
+        'Шахматы':      { bg: '#b2ebf2', border: '#00796b', text: '#004d40' },
+        'Массаж':       { bg: '#d1c4e9', border: '#5e35b1', text: '#311b92' },
+        'Барабаны':     { bg: '#ffcdd2', border: '#d32f2f', text: '#b71c1c' },
+        'Дефектолог':   { bg: '#e1bee7', border: '#7b1fa2', text: '#4a148c' }
+    };
+    const DEFAULT_COLOR = { bg: '#f5f5f5', border: '#90a4ae', text: '#37474f' };
+
+    function getSubjectColor(subject) {
+        return SUBJECT_COLORS[subject] || DEFAULT_COLOR;
+    }
+
+    // Начальные данные
     const initialSchedule = [
-        { id: '1', day: 0, hour: 8, subject: 'Английский', phone: '968 439-84-36', duration: 60, color: '#ffeaa7' },
-        { id: '2', day: 0, hour: 9, subject: 'Скорочтение', phone: '966 077-10-48', duration: 60, color: '#81ecec' },
-        { id: '3', day: 0, hour: 10, subject: 'Калиграф', phone: '909 170-90-76', duration: 40, color: '#dec0f1' },
-        { id: '4', day: 0, hour: 11, subject: 'Математика', phone: '900 236-99-90', duration: 60, color: '#fab1a0' },
-        { id: '5', day: 0, hour: 12, subject: 'Логопед', phone: '906 296-91-25', duration: 45, color: '#dec0f1' },
-        { id: '6', day: 0, hour: 14, subject: 'Русский', phone: '916 147-38-00', duration: 60, color: '#81ecec' },
-        { id: '7', day: 0, hour: 15, subject: 'Речь', phone: '937 311-75-02', duration: 60, color: '#ffeaa7' },
-        { id: '8', day: 0, hour: 16, subject: 'Айкидо', phone: 'в 17.00', duration: 60, color: '#81ecec' },
-        { id: '9', day: 0, hour: 19, subject: 'Английский', phone: '913 431-88-86', duration: 60, color: '#ffeaa7' },
-        { id: '10', day: 1, hour: 8, subject: 'Английский', phone: '952 530-54-54', duration: 60, color: '#ffeaa7' },
-        { id: '11', day: 1, hour: 9, subject: 'Логопед', phone: '902 327-20-54', duration: 45, color: '#e2f0d9' },
-        { id: '12', day: 1, hour: 10, subject: 'Калиграф', phone: '905 862-09-36', duration: 40, color: '#dec0f1' },
-        { id: '13', day: 1, hour: 11, subject: 'Английский', phone: '989 282-26-29', duration: 60, color: '#ffeaa7' },
-        { id: '14', day: 1, hour: 12, subject: 'Логопед', phone: '928 863-68-88', duration: 40, color: '#e2f0d9' },
-        { id: '15', day: 1, hour: 14, subject: 'Логопед', phone: '965 187-25-73', duration: 45, color: '#e2f0d9' },
-        { id: '16', day: 1, hour: 15, subject: 'Речь', phone: '926 217-37-29', duration: 60, color: '#e2f0d9' },
-        { id: '17', day: 1, hour: 16, subject: 'Баскетбол', phone: '16.00-18.00', duration: 120, color: '#ff7675' },
-        { id: '18', day: 1, hour: 18, subject: 'Бассейн', phone: '964 339 4753', duration: 60, color: '#dec0f1' },
-        { id: '19', day: 2, hour: 8, subject: 'Калиграфия', phone: '900 969-30-21', duration: 60, color: '#a29bfe' },
-        { id: '20', day: 2, hour: 9, subject: 'Логопед', phone: '911 237-90-72', duration: 45, color: '#dec0f1' },
-        { id: '21', day: 2, hour: 10, subject: 'Логопед', phone: '918 174-21-16', duration: 60, color: '#dec0f1' },
-        { id: '22', day: 2, hour: 11, subject: 'Английский', phone: '960 946-92-71', duration: 60, color: '#ffeaa7' },
-        { id: '23', day: 2, hour: 12, subject: 'Логопед', phone: '904 026-07-26', duration: 50, color: '#dec0f1' },
-        { id: '24', day: 2, hour: 14, subject: 'Логопед', phone: '903 290-97-66', duration: 30, color: '#a29bfe' },
-        { id: '25', day: 2, hour: 15, subject: 'Логопед', phone: '910 748-62-20', duration: 45, color: '#e2f0d9' },
-        { id: '26', day: 2, hour: 16, subject: 'Логопед', phone: '920 605-77-33', duration: 45, color: '#e2f0d9' },
-        { id: '27', day: 2, hour: 18, subject: 'Волейбол', phone: '18.30-20.00', duration: 90, color: '#ff7675' },
-        { id: '28', day: 3, hour: 9, subject: 'Английский', phone: '902 007-99-72', duration: 60, color: '#ffeaa7' },
-        { id: '29', day: 3, hour: 10, subject: 'Логопед', phone: '983 304-32-41', duration: 45, color: '#e2f0d9' },
-        { id: '30', day: 3, hour: 11, subject: 'Логопед', phone: '926 030-28-34', duration: 45, color: '#e2f0d9' },
-        { id: '31', day: 3, hour: 12, subject: 'Математика', phone: '966 077-10-48', duration: 60, color: '#fab1a0' },
-        { id: '32', day: 3, hour: 14, subject: 'Логопед', phone: '916 330-51-77', duration: 40, color: '#e2f0d9' },
-        { id: '33', day: 3, hour: 15, subject: 'Речь', phone: '964 909-79-87', duration: 40, color: '#e2f0d9' },
-        { id: '34', day: 3, hour: 16, subject: 'Баскетбол', phone: '17.00-18.30', duration: 90, color: '#ff7675' },
-        { id: '35', day: 3, hour: 18, subject: 'Бассейн', phone: '964 339 4753', duration: 60, color: '#dec0f1' },
-        { id: '36', day: 4, hour: 8, subject: 'Калиграф', phone: '900 969-30-21', duration: 60, color: '#a29bfe' },
-        { id: '37', day: 4, hour: 9, subject: 'Логопед', phone: '375 25 912 0406', duration: 60, color: '#e2f0d9' },
-        { id: '38', day: 4, hour: 10, subject: 'Дефектолог', phone: '906 075-89-66', duration: 60, color: '#dec0f1' },
-        { id: '39', day: 4, hour: 11, subject: 'Логопед', phone: '963 106-56-53', duration: 45, color: '#dec0f1' },
-        { id: '40', day: 4, hour: 12, subject: 'Логопед', phone: '919 675-64-55', duration: 45, color: '#e2f0d9' },
-        { id: '41', day: 4, hour: 14, subject: 'Логопед', phone: '908 027-50-33', duration: 30, color: '#e2f0d9' },
-        { id: '42', day: 4, hour: 15, subject: 'Логопед', phone: '915 000-92-55', duration: 45, color: '#e2f0d9' },
-        { id: '43', day: 4, hour: 16, subject: 'Волейбол', phone: '16.30-18.00', duration: 90, color: '#ff7675' },
-        { id: '44', day: 4, hour: 18, subject: 'Массаж', phone: 'в 18.00', duration: 60, color: '#a29bfe' },
-        { id: '45', day: 5, hour: 8, subject: 'Логопед', phone: '912 626-43-30', duration: 30, color: '#e2f0d9' },
-        { id: '46', day: 5, hour: 13, subject: 'Логопед', phone: '903 255-39-30', duration: 60, color: '#e2f0d9' },
-        { id: '47', day: 5, hour: 14, subject: 'Логопед', phone: '927 055-09-18', duration: 60, color: '#e2f0d9' },
-        { id: '48', day: 5, hour: 15, subject: 'Русский', phone: '951 608-63-70', duration: 60, color: '#81ecec' },
-        { id: '49', day: 5, hour: 16, subject: 'Шахматы', phone: 'в 17.00', duration: 60, color: '#81ecec' },
-        { id: '50', day: 5, hour: 19, subject: 'Речь', phone: '909 096-12-31', duration: 60, color: '#dec0f1' },
-        { id: '51', day: 6, hour: 9, subject: 'Английский', phone: '926 085-18-18', duration: 60, color: '#ffeaa7' },
-        { id: '52', day: 6, hour: 10, subject: 'Логопед', phone: '952 267-40-32', duration: 60, color: '#e2f0d9' },
-        { id: '53', day: 6, hour: 11, subject: 'Математика', phone: '908 107-59-23', duration: 60, color: '#fab1a0' },
-        { id: '54', day: 6, hour: 12, subject: 'Логопед', phone: '900 352-24-43', duration: 60, color: '#e2f0d9' },
-        { id: '55', day: 6, hour: 14, subject: 'Английский', phone: '925 250-75-05', duration: 60, color: '#ffeaa7' },
-        { id: '56', day: 6, hour: 15, subject: 'Математика', phone: '964 858-33-61', duration: 60, color: '#fab1a0' },
-        { id: '57', day: 6, hour: 18, subject: 'Барабаны', phone: '18.00-20.00', duration: 120, color: '#ff7675' }
+        { id: '1', day: 0, hour: 8, subject: 'Английский', phone: '968 439-84-36', duration: 60 },
+        { id: '2', day: 0, hour: 9, subject: 'Скорочтение', phone: '966 077-10-48', duration: 60 },
+        { id: '3', day: 0, hour: 10, subject: 'Калиграф', phone: '909 170-90-76', duration: 40 },
+        { id: '4', day: 0, hour: 11, subject: 'Математика', phone: '900 236-99-90', duration: 60 },
+        { id: '5', day: 0, hour: 12, subject: 'Логопед', phone: '906 296-91-25', duration: 45 },
+        { id: '6', day: 0, hour: 14, subject: 'Русский', phone: '916 147-38-00', duration: 60 },
+        { id: '7', day: 0, hour: 15, subject: 'Речь', phone: '937 311-75-02', duration: 60 },
+        { id: '8', day: 0, hour: 16, subject: 'Айкидо', phone: 'в 17.00', duration: 60 },
+        { id: '9', day: 0, hour: 19, subject: 'Английский', phone: '913 431-88-86', duration: 60 },
+        { id: '10', day: 1, hour: 8, subject: 'Английский', phone: '952 530-54-54', duration: 60 },
+        { id: '11', day: 1, hour: 9, subject: 'Логопед', phone: '902 327-20-54', duration: 45 },
+        { id: '12', day: 1, hour: 10, subject: 'Калиграф', phone: '905 862-09-36', duration: 40 },
+        { id: '13', day: 1, hour: 11, subject: 'Английский', phone: '989 282-26-29', duration: 60 },
+        { id: '14', day: 1, hour: 12, subject: 'Логопед', phone: '928 863-68-88', duration: 40 },
+        { id: '15', day: 1, hour: 14, subject: 'Логопед', phone: '965 187-25-73', duration: 45 },
+        { id: '16', day: 1, hour: 15, subject: 'Речь', phone: '926 217-37-29', duration: 60 },
+        { id: '17', day: 1, hour: 16, subject: 'Баскетбол', phone: '16.00-18.00', duration: 120 },
+        { id: '18', day: 1, hour: 18, subject: 'Бассейн', phone: '964 339 4753', duration: 60 },
+        { id: '19', day: 2, hour: 8, subject: 'Калиграфия', phone: '900 969-30-21', duration: 60 },
+        { id: '20', day: 2, hour: 9, subject: 'Логопед', phone: '911 237-90-72', duration: 45 },
+        { id: '21', day: 2, hour: 10, subject: 'Логопед', phone: '918 174-21-16', duration: 60 },
+        { id: '22', day: 2, hour: 11, subject: 'Английский', phone: '960 946-92-71', duration: 60 },
+        { id: '23', day: 2, hour: 12, subject: 'Логопед', phone: '904 026-07-26', duration: 50 },
+        { id: '24', day: 2, hour: 14, subject: 'Логопед', phone: '903 290-97-66', duration: 30 },
+        { id: '25', day: 2, hour: 15, subject: 'Логопед', phone: '910 748-62-20', duration: 45 },
+        { id: '26', day: 2, hour: 16, subject: 'Логопед', phone: '920 605-77-33', duration: 45 },
+        { id: '27', day: 2, hour: 18, subject: 'Волейбол', phone: '18.30-20.00', duration: 90 },
+        { id: '28', day: 3, hour: 9, subject: 'Английский', phone: '902 007-99-72', duration: 60 },
+        { id: '29', day: 3, hour: 10, subject: 'Логопед', phone: '983 304-32-41', duration: 45 },
+        { id: '30', day: 3, hour: 11, subject: 'Логопед', phone: '926 030-28-34', duration: 45 },
+        { id: '31', day: 3, hour: 12, subject: 'Математика', phone: '966 077-10-48', duration: 60 },
+        { id: '32', day: 3, hour: 14, subject: 'Логопед', phone: '916 330-51-77', duration: 40 },
+        { id: '33', day: 3, hour: 15, subject: 'Речь', phone: '964 909-79-87', duration: 40 },
+        { id: '34', day: 3, hour: 16, subject: 'Баскетбол', phone: '17.00-18.30', duration: 90 },
+        { id: '35', day: 3, hour: 18, subject: 'Бассейн', phone: '964 339 4753', duration: 60 },
+        { id: '36', day: 4, hour: 8, subject: 'Калиграф', phone: '900 969-30-21', duration: 60 },
+        { id: '37', day: 4, hour: 9, subject: 'Логопед', phone: '375 25 912 0406', duration: 60 },
+        { id: '38', day: 4, hour: 10, subject: 'Дефектолог', phone: '906 075-89-66', duration: 60 },
+        { id: '39', day: 4, hour: 11, subject: 'Логопед', phone: '963 106-56-53', duration: 45 },
+        { id: '40', day: 4, hour: 12, subject: 'Логопед', phone: '919 675-64-55', duration: 45 },
+        { id: '41', day: 4, hour: 14, subject: 'Логопед', phone: '908 027-50-33', duration: 30 },
+        { id: '42', day: 4, hour: 15, subject: 'Логопед', phone: '915 000-92-55', duration: 45 },
+        { id: '43', day: 4, hour: 16, subject: 'Волейбол', phone: '16.30-18.00', duration: 90 },
+        { id: '44', day: 4, hour: 18, subject: 'Массаж', phone: 'в 18.00', duration: 60 },
+        { id: '45', day: 5, hour: 8, subject: 'Логопед', phone: '912 626-43-30', duration: 30 },
+        { id: '46', day: 5, hour: 13, subject: 'Логопед', phone: '903 255-39-30', duration: 60 },
+        { id: '47', day: 5, hour: 14, subject: 'Логопед', phone: '927 055-09-18', duration: 60 },
+        { id: '48', day: 5, hour: 15, subject: 'Русский', phone: '951 608-63-70', duration: 60 },
+        { id: '49', day: 5, hour: 16, subject: 'Шахматы', phone: 'в 17.00', duration: 60 },
+        { id: '50', day: 5, hour: 19, subject: 'Речь', phone: '909 096-12-31', duration: 60 },
+        { id: '51', day: 6, hour: 9, subject: 'Английский', phone: '926 085-18-18', duration: 60 },
+        { id: '52', day: 6, hour: 10, subject: 'Логопед', phone: '952 267-40-32', duration: 60 },
+        { id: '53', day: 6, hour: 11, subject: 'Математика', phone: '908 107-59-23', duration: 60 },
+        { id: '54', day: 6, hour: 12, subject: 'Логопед', phone: '900 352-24-43', duration: 60 },
+        { id: '55', day: 6, hour: 14, subject: 'Английский', phone: '925 250-75-05', duration: 60 },
+        { id: '56', day: 6, hour: 15, subject: 'Математика', phone: '964 858-33-61', duration: 60 },
+        { id: '57', day: 6, hour: 18, subject: 'Барабаны', phone: '18.00-20.00', duration: 120 }
     ];
 
     // Состояние
@@ -66,7 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
         activeSchedule: JSON.parse(localStorage.getItem('schedule_active')) || initialSchedule,
         draftSchedule: JSON.parse(localStorage.getItem('schedule_draft')) || JSON.parse(JSON.stringify(initialSchedule)),
         sleepLogs: JSON.parse(localStorage.getItem('sleepLogs')) || [],
-        currentVersion: localStorage.getItem('currentVersion') || 'active', 
+        currentVersion: localStorage.getItem('currentVersion') || 'active',
         editMode: localStorage.getItem('editMode') !== 'false'
     };
 
@@ -104,77 +129,80 @@ document.addEventListener('DOMContentLoaded', () => {
         renderStats();
     }
 
+    // === Глобальная аналитика ===
     function renderStats() {
         if (!studyTimeText || !restTimeText || !subjectBreakdownArea) return;
-        
         const schedule = getCurrentSchedule();
         const studyMinutes = schedule.reduce((acc, item) => acc + (parseInt(item.duration) || 0), 0);
-        studyTimeText.textContent = `${Math.round(studyMinutes / 60 * 10) / 10} ч`;
-        
-        const totalWeeklyMinutes = 7 * 14 * 60; 
+        studyTimeText.textContent = `${(studyMinutes / 60).toFixed(1)} ч`;
+        const totalWeeklyMinutes = 7 * 14 * 60;
         const restMinutes = totalWeeklyMinutes - studyMinutes;
-        restTimeText.textContent = `${Math.round(restMinutes / 60 * 10) / 10} ч`;
+        restTimeText.textContent = `${(restMinutes / 60).toFixed(1)} ч`;
 
+        // Разбивка по предметам
         const summary = {};
         schedule.forEach(item => {
             const subject = item.subject || 'Без названия';
-            if (!summary[subject]) summary[subject] = { min: 0, color: item.color };
+            if (!summary[subject]) summary[subject] = { min: 0, count: 0 };
             summary[subject].min += parseInt(item.duration) || 0;
+            summary[subject].count++;
         });
 
         subjectBreakdownArea.innerHTML = '';
-        Object.entries(summary).sort((a,b) => b[1].min - a[1].min).forEach(([name, data]) => {
+        Object.entries(summary).sort((a, b) => b[1].min - a[1].min).forEach(([name, data]) => {
+            const sc = getSubjectColor(name);
             const card = document.createElement('div');
             card.className = 'subject-card';
-            card.style.borderLeftColor = data.color;
+            card.style.borderLeftColor = sc.border;
+            card.style.background = sc.bg;
             card.innerHTML = `
-                <span class="subject-name">${name}</span>
-                <span class="subject-hours">${Math.round(data.min / 60 * 10) / 10} ч <small>(${data.min} мин)</small></span>
+                <span class="subject-name" style="color:${sc.text}">${name}</span>
+                <span class="subject-hours">${(data.min / 60).toFixed(1)} ч <small>(${data.min} мин, ${data.count} зан.)</small></span>
             `;
             subjectBreakdownArea.appendChild(card);
         });
     }
 
+    // === Сетка расписания ===
     function renderGrid() {
         if (!grid) return;
         grid.innerHTML = '';
         grid.style.gridTemplateColumns = `60px repeat(${days.length}, 1fr)`;
-        
+
+        // Заголовки
         const corner = document.createElement('div');
         corner.className = 'grid-header corner';
         grid.appendChild(corner);
 
         days.forEach(day => {
-            const dayHeader = document.createElement('div');
-            dayHeader.className = 'grid-header day-name';
-            dayHeader.textContent = day;
-            grid.appendChild(dayHeader);
+            const h = document.createElement('div');
+            h.className = 'grid-header day-name';
+            h.textContent = day;
+            grid.appendChild(h);
         });
 
+        // Ячейки
+        const schedule = getCurrentSchedule();
         hours.forEach(hour => {
-            const timeLabel = document.createElement('div');
-            timeLabel.className = 'time-label';
-            timeLabel.textContent = `${hour < 10 ? '0'+hour : hour}:00`;
-            grid.appendChild(timeLabel);
+            const tl = document.createElement('div');
+            tl.className = 'time-label';
+            tl.textContent = `${hour < 10 ? '0' + hour : hour}:00`;
+            grid.appendChild(tl);
 
-            days.forEach((day, dayIndex) => {
+            days.forEach((_, dayIndex) => {
                 const cell = document.createElement('div');
                 cell.className = 'grid-cell';
                 cell.dataset.day = dayIndex;
                 cell.dataset.hour = hour;
-                
+
                 if (state.editMode) {
-                    cell.addEventListener('dragover', (e) => {
-                        e.preventDefault();
-                        cell.classList.add('drag-over');
-                    });
+                    cell.addEventListener('dragover', e => { e.preventDefault(); cell.classList.add('drag-over'); });
                     cell.addEventListener('dragleave', () => cell.classList.remove('drag-over'));
-                    cell.addEventListener('drop', (e) => {
+                    cell.addEventListener('drop', e => {
                         e.preventDefault();
                         cell.classList.remove('drag-over');
                         const itemId = e.dataTransfer.getData('text/plain');
-                        const schedule = getCurrentSchedule();
-                        const item = schedule.find(i => i.id === itemId);
+                        const item = getCurrentSchedule().find(i => i.id === itemId);
                         if (item) {
                             item.day = parseInt(cell.dataset.day);
                             item.hour = parseInt(cell.dataset.hour);
@@ -182,38 +210,37 @@ document.addEventListener('DOMContentLoaded', () => {
                             renderGrid();
                         }
                     });
-                    cell.addEventListener('click', (e) => {
+                    cell.addEventListener('click', e => {
                         if (e.target === cell) openModal(null, dayIndex, hour);
                     });
                 }
-                
-                const schedule = getCurrentSchedule();
+
                 const items = schedule.filter(i => i.day == dayIndex && i.hour == hour);
                 items.forEach(item => {
+                    const sc = getSubjectColor(item.subject);
                     const block = document.createElement('div');
                     block.className = 'schedule-block';
                     block.draggable = state.editMode;
-                    block.style.borderLeftColor = item.color || '#0984e3';
+                    block.style.background = sc.bg;
+                    block.style.borderLeftColor = sc.border;
+                    block.style.color = sc.text;
                     block.innerHTML = `
-                        ${state.editMode ? `<div class="block-actions"><span class="delete-btn" title="Удалить">×</span></div>` : ''}
+                        ${state.editMode ? '<div class="block-actions"><span class="delete-btn" title="Удалить">×</span></div>' : ''}
                         <div class="block-phone">${item.phone || ''}</div>
                         <div class="block-subject">${item.subject || 'Занятие'}</div>
                         <div class="block-duration">${item.duration} мин</div>
                     `;
-                    
+
                     if (state.editMode) {
-                        block.addEventListener('dragstart', (e) => {
+                        block.addEventListener('dragstart', e => {
                             e.dataTransfer.setData('text/plain', item.id);
-                            setTimeout(() => block.style.display = 'none', 0);
+                            setTimeout(() => block.style.opacity = '0.4', 0);
                         });
-                        block.addEventListener('dragend', () => block.style.display = 'block');
-                        block.addEventListener('click', (e) => {
-                            e.stopPropagation();
-                            openModal(item);
-                        });
+                        block.addEventListener('dragend', () => block.style.opacity = '1');
+                        block.addEventListener('click', e => { e.stopPropagation(); openModal(item); });
                         const delBtn = block.querySelector('.delete-btn');
                         if (delBtn) {
-                            delBtn.addEventListener('click', (e) => {
+                            delBtn.addEventListener('click', e => {
                                 e.stopPropagation();
                                 if (confirm('Удалить это занятие?')) {
                                     if (state.currentVersion === 'active') {
@@ -232,8 +259,30 @@ document.addEventListener('DOMContentLoaded', () => {
                 grid.appendChild(cell);
             });
         });
+
+        // === Итоговая строка под каждым днём ===
+        const summaryLabel = document.createElement('div');
+        summaryLabel.className = 'time-label summary-label';
+        summaryLabel.textContent = 'Итого';
+        grid.appendChild(summaryLabel);
+
+        days.forEach((_, dayIndex) => {
+            const dayItems = schedule.filter(i => i.day == dayIndex);
+            const totalMin = dayItems.reduce((s, i) => s + (parseInt(i.duration) || 0), 0);
+            const uniqueSubjects = new Set(dayItems.map(i => i.subject)).size;
+
+            const cell = document.createElement('div');
+            cell.className = 'grid-cell summary-cell';
+            cell.innerHTML = `
+                <div class="summary-row"><span class="summary-icon">📚</span> ${dayItems.length} зан.</div>
+                <div class="summary-row"><span class="summary-icon">🎯</span> ${uniqueSubjects} предм.</div>
+                <div class="summary-row"><span class="summary-icon">⏱</span> ${(totalMin / 60).toFixed(1)} ч</div>
+            `;
+            grid.appendChild(cell);
+        });
     }
 
+    // === Модальное окно ===
     function openModal(item = null, day = 0, hour = 7) {
         if (!state.editMode) return;
         modalOverlay.classList.add('active');
@@ -242,7 +291,8 @@ document.addEventListener('DOMContentLoaded', () => {
             subjectInput.value = item.subject;
             phoneInput.value = item.phone || '';
             durationInput.value = item.duration || 60;
-            colorInput.value = item.color || '#0984e3';
+            const sc = getSubjectColor(item.subject);
+            colorInput.value = sc.border;
             document.getElementById('modalTitle').textContent = 'Редактировать занятие';
         } else {
             editIdInput.value = '';
@@ -262,49 +312,42 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     document.getElementById('closeModalBtn')?.addEventListener('click', closeModal);
-    modalOverlay?.addEventListener('click', (e) => {
-        if (e.target === modalOverlay) closeModal();
-    });
+    modalOverlay?.addEventListener('click', e => { if (e.target === modalOverlay) closeModal(); });
 
-    scheduleForm?.addEventListener('submit', (e) => {
+    scheduleForm?.addEventListener('submit', e => {
         e.preventDefault();
         const id = editIdInput.value;
         const phone = phoneInput.value;
         const data = {
             subject: subjectInput.value,
-            phone: phone,
+            phone,
             duration: parseInt(durationInput.value) || 60,
             color: colorInput.value
         };
-
         const schedule = getCurrentSchedule();
         if (id) {
             const item = schedule.find(i => i.id === id);
             if (item) Object.assign(item, data);
         } else {
-            const newItem = {
+            schedule.push({
                 id: Date.now().toString(),
                 day: parseInt(editIdInput.dataset.newDay),
                 hour: parseInt(editIdInput.dataset.newHour),
                 ...data
-            };
-            schedule.push(newItem);
+            });
         }
-
         if (phone && !state.teachers[phone]) {
             state.teachers[phone] = { color: data.color };
         }
-
         saveState();
         renderGrid();
         closeModal();
     });
 
-    // Режимы и вкладки
+    // === Режимы и вкладки ===
     modeToggle.checked = state.editMode;
     document.body.classList.toggle('view-mode', !state.editMode);
     modeLabel.textContent = state.editMode ? 'Редактирование' : 'Просмотр';
-
     if (state.currentVersion === 'draft') {
         draftTabBtn.classList.add('active');
         activeTabBtn.classList.remove('active');
@@ -334,7 +377,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderGrid();
     });
 
-    // Учителя
+    // === Учителя ===
     document.getElementById('manageTeachersBtn')?.addEventListener('click', () => {
         renderTeachers();
         document.getElementById('teachersModal').classList.add('active');
@@ -345,8 +388,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!list) return;
         list.innerHTML = '';
         const schedule = getCurrentSchedule();
-        const uniquePhones = [...new Set(schedule.map(s => s.phone).filter(p => p && !p.startsWith('в ')))];
-        
+        const uniquePhones = [...new Set(schedule.map(s => s.phone).filter(p => p && !p.startsWith('в ') && !/^\d{2}\.\d{2}/.test(p)))];
+
         uniquePhones.forEach(phone => {
             const teacher = state.teachers[phone] || { status: 'active' };
             const div = document.createElement('div');
@@ -354,9 +397,7 @@ document.addEventListener('DOMContentLoaded', () => {
             div.innerHTML = `
                 <div class="teacher-info">
                     <div class="teacher-name">${phone}</div>
-                    <div class="teacher-meta">
-                        ${teacher.bank || 'Банк не указан'} | ${teacher.card || 'Карта не указана'}
-                    </div>
+                    <div class="teacher-meta">${teacher.bank || 'Банк не указан'} | ${teacher.card || 'Карта не указана'}</div>
                 </div>
                 <span class="status-badge status-${teacher.status || 'active'}">${teacher.status === 'active' ? 'Активен' : teacher.status === 'temporary' ? 'Временно' : 'Неактивен'}</span>
                 <button class="primary-btn sm-btn edit-teacher-btn" data-phone="${phone}">Изменить</button>
@@ -372,7 +413,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    document.getElementById('teacherForm')?.addEventListener('submit', (e) => {
+    document.getElementById('teacherForm')?.addEventListener('submit', e => {
         e.preventDefault();
         const phone = document.getElementById('editTeacherPhone').value;
         state.teachers[phone] = {
