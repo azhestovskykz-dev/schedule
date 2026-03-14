@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Интерактивное Расписание</title>
-    <link rel="stylesheet" href="styles.css?v=2">
+    <link rel="stylesheet" href="styles.css?v=3">
 </head>
 <body>
     <div id="app">
@@ -23,34 +23,30 @@
                     <span id="modeLabel">Редактирование</span>
                 </div>
                 <div class="header-actions">
-                    <button id="manageTeachersBtn" class="primary-btn">Учителя</button>
-                    <button id="logSleepBtn" class="secondary-btn">Сон</button>
+                    <button id="manageTeachersBtn" class="primary-btn">👩‍🏫 Преподаватели</button>
+                    <button id="logSleepBtn" class="secondary-btn">😴 Сон</button>
                 </div>
             </div>
         </header>
 
         <main class="main-content">
-            <div id="scheduleGrid" class="schedule-grid">
-                <!-- Сетка расписания будет генерироваться через JS -->
-            </div>
+            <div id="scheduleGrid" class="schedule-grid"></div>
             
             <section class="analytics-section">
                 <div class="analytics-header">
-                    <h2>Аналитика времени</h2>
+                    <h2>📊 Аналитика времени</h2>
                     <div class="global-stats">
                         <div class="stat-card main">
                             <span class="stat-label">Всего учебы</span>
                             <span id="studyTimeText" class="stat-value">0 ч</span>
                         </div>
-                        <div class="stat-card main">
+                        <div class="stat-card main rest">
                             <span class="stat-label">Свободное время</span>
                             <span id="restTimeText" class="stat-value">0 ч</span>
                         </div>
                     </div>
                 </div>
-                <div id="subjectBreakdownArea" class="subject-breakdown">
-                    <!-- Карточки предметов появятся здесь -->
-                </div>
+                <div id="subjectBreakdownArea" class="subject-breakdown"></div>
             </section>
         </main>
     </div>
@@ -62,33 +58,67 @@
             <form id="scheduleForm">
                 <input type="hidden" id="editId">
                 <div class="form-group">
-                    <label for="subjectInput">Предмет:</label>
-                    <input type="text" id="subjectInput" required>
+                    <label for="subjectInput">📚 Предмет:</label>
+                    <select id="subjectInput" required>
+                        <option value="">— Выберите предмет —</option>
+                        <option value="Английский">Английский</option>
+                        <option value="Математика">Математика</option>
+                        <option value="Каллиграфия">Каллиграфия</option>
+                        <option value="Логопедия">Логопедия</option>
+                        <option value="Речь">Речь</option>
+                        <option value="Русский">Русский</option>
+                        <option value="Скорочтение">Скорочтение</option>
+                        <option value="Дефектолог">Дефектолог</option>
+                        <option value="Баскетбол">Баскетбол</option>
+                        <option value="Волейбол">Волейбол</option>
+                        <option value="Бассейн">Бассейн</option>
+                        <option value="Айкидо">Айкидо</option>
+                        <option value="Шахматы">Шахматы</option>
+                        <option value="Барабаны">Барабаны</option>
+                        <option value="Массаж">Массаж</option>
+                    </select>
                 </div>
                 <div class="form-group">
-                    <label for="phoneInput">Телефон / Учитель:</label>
+                    <label for="teacherSelect">👩‍🏫 Преподаватель:</label>
+                    <select id="teacherSelect">
+                        <option value="">— Выберите или введите ниже —</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="phoneInput">📞 Телефон / Контакт:</label>
                     <input type="text" id="phoneInput">
                 </div>
                 <div class="form-group">
-                    <label for="durationInput">Длительность (мин):</label>
+                    <label for="durationInput">⏱ Длительность (мин):</label>
                     <input type="number" id="durationInput" value="60">
                 </div>
                 <div class="form-group">
-                    <label for="colorInput">Цвет блока:</label>
+                    <label for="colorInput">🎨 Цвет блока:</label>
                     <input type="color" id="colorInput" value="#0984e3">
                 </div>
                 <div class="modal-actions">
                     <button type="button" id="closeModalBtn" class="secondary-btn">Отмена</button>
-                    <button type="submit" class="primary-btn">Сохранить</button>
+                    <button type="submit" class="primary-btn">💾 Сохранить</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Модальное окно управления учителями -->
+    <!-- Модальное окно преподавателей -->
     <div id="teachersModal" class="modal-overlay">
-        <div class="modal-content wide">
-            <h2>Настройка учителей</h2>
+        <div class="modal-content wide teachers-panel">
+            <div class="teachers-header">
+                <h2>👩‍🏫 Преподаватели</h2>
+                <div class="teachers-toolbar">
+                    <select id="teacherSortBy">
+                        <option value="subject">По предмету</option>
+                        <option value="price">По стоимости</option>
+                        <option value="status">По статусу</option>
+                        <option value="name">По имени</option>
+                    </select>
+                    <button type="button" id="addTeacherBtn" class="primary-btn sm-btn">➕ Добавить</button>
+                </div>
+            </div>
             <div id="teachersList" class="teachers-list"></div>
             <div class="modal-actions">
                 <button type="button" id="closeTeachersBtn" class="secondary-btn">Закрыть</button>
@@ -96,36 +126,128 @@
         </div>
     </div>
 
-    <!-- Модальное окно редактирования учителя -->
+    <!-- Карточка редактирования преподавателя -->
     <div id="teacherEditModal" class="modal-overlay">
-        <div class="modal-content">
-            <h2>Реквизиты учителя</h2>
+        <div class="modal-content wide">
+            <h2 id="teacherEditTitle">📋 Карточка преподавателя</h2>
             <form id="teacherForm">
-                <input type="hidden" id="editTeacherPhone">
-                <div class="form-group">
-                    <label for="teacherBank">Банк:</label>
-                    <input type="text" id="teacherBank" placeholder="Например, Тинькофф">
-                </div>
-                <div class="form-group">
-                    <label for="teacherCard">Номер карты:</label>
-                    <input type="text" id="teacherCard" placeholder="0000 0000 0000 0000">
-                </div>
-                <div class="form-group">
-                    <label for="teacherStatus">Статус:</label>
-                    <select id="teacherStatus">
-                        <option value="active">Активен</option>
-                        <option value="inactive">Неактивен</option>
-                        <option value="temporary">Временно недоступен</option>
-                    </select>
-                </div>
+                <input type="hidden" id="editTeacherId">
+
+                <fieldset class="form-section">
+                    <legend>👤 Личные данные</legend>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="teacherName">ФИО:</label>
+                            <input type="text" id="teacherName" placeholder="Иванова Мария Алексеевна">
+                        </div>
+                        <div class="form-group">
+                            <label for="teacherPhone">📞 Телефон:</label>
+                            <input type="text" id="teacherPhone" placeholder="900 000-00-00">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="teacherEmail">📧 Email:</label>
+                            <input type="email" id="teacherEmail" placeholder="teacher@mail.ru">
+                        </div>
+                        <div class="form-group">
+                            <label for="teacherTelegram">✈️ Telegram:</label>
+                            <input type="text" id="teacherTelegram" placeholder="@username">
+                        </div>
+                    </div>
+                </fieldset>
+
+                <fieldset class="form-section">
+                    <legend>🖥 Платформа для занятий</legend>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="teacherPlatform">Тип:</label>
+                            <select id="teacherPlatform">
+                                <option value="">— Не указано —</option>
+                                <option value="teams">Microsoft Teams</option>
+                                <option value="zoom">Zoom</option>
+                                <option value="telegram">Telegram</option>
+                                <option value="skype">Skype</option>
+                                <option value="website">Сайт / Площадка</option>
+                                <option value="offline">Очно</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="teacherPlatformLink">🔗 Ссылка:</label>
+                            <input type="text" id="teacherPlatformLink" placeholder="https://...">
+                        </div>
+                    </div>
+                </fieldset>
+
+                <fieldset class="form-section">
+                    <legend>💳 Оплата</legend>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="teacherBank">Банк:</label>
+                            <select id="teacherBank">
+                                <option value="">— Не указан —</option>
+                                <option value="sber">Сбербанк</option>
+                                <option value="alfa">Альфа-Банк</option>
+                                <option value="vtb">ВТБ</option>
+                                <option value="tinkoff">Тинькофф</option>
+                                <option value="raiffeisen">Райффайзен</option>
+                                <option value="foreign">Зарубежный банк</option>
+                                <option value="other">Другой</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="teacherCard">💳 Номер карты:</label>
+                            <input type="text" id="teacherCard" placeholder="0000 0000 0000 0000">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="teacherCardType">Тип карты:</label>
+                            <select id="teacherCardType">
+                                <option value="russian">Российская</option>
+                                <option value="foreign">Зарубежная</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="teacherPrice">💰 Цена за урок (₽):</label>
+                            <input type="number" id="teacherPrice" placeholder="2000">
+                        </div>
+                    </div>
+                </fieldset>
+
+                <fieldset class="form-section">
+                    <legend>📚 Предметы и статус</legend>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="teacherSubjects">Предметы:</label>
+                            <input type="text" id="teacherSubjects" placeholder="Логопедия, Речь">
+                        </div>
+                        <div class="form-group">
+                            <label for="teacherStatus">Статус:</label>
+                            <select id="teacherStatus">
+                                <option value="active">✅ Активен</option>
+                                <option value="inactive">❌ Неактивен</option>
+                                <option value="temporary">⏸ Временно недоступен</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="teacherWorkedBefore">
+                            Занимались ранее
+                        </label>
+                    </div>
+                </fieldset>
+
                 <div class="modal-actions">
+                    <button type="button" id="deleteTeacherBtn" class="danger-btn">🗑 Удалить</button>
                     <button type="button" id="cancelTeacherEdit" class="secondary-btn">Отмена</button>
-                    <button type="submit" class="primary-btn">Сохранить</button>
+                    <button type="submit" class="primary-btn">💾 Сохранить</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <script src="app.js?v=2"></script>
+    <script src="app.js?v=3"></script>
 </body>
 </html>
