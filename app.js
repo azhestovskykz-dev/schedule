@@ -42,12 +42,13 @@ const DEFAULT_COLOR = { bg: '#dfe6e9', text: '#2d3436' };
 
 // Платформы
 const PLATFORMS = {
-    'teams': { icon: '🟦', name: 'Teams' },
-    'zoom': { icon: '📹', name: 'Zoom' },
-    'telegram': { icon: '✈️', name: 'Telegram' },
-    'skype': { icon: '💬', name: 'Skype' },
-    'website': { icon: '🌐', name: 'Сайт' },
-    'offline': { icon: '🚶', name: 'Очно' }
+    'teams': { icon: '🟦', name: 'Teams', color: '#6264a7' },
+    'zoom': { icon: '📹', name: 'Zoom', color: '#2d8cff' },
+    'telegram': { icon: '📨', name: 'Telegram', color: '#26a5e4' },
+    'yandex': { icon: '🟡', name: 'Я.Телемост', color: '#fc3f1d' },
+    'skype': { icon: '💬', name: 'Skype', color: '#00aff0' },
+    'website': { icon: '🌐', name: 'Сайт', color: '#0ea5e9' },
+    'offline': { icon: '🚶', name: 'Очно', color: '#10b981' }
 };
 
 // =========================================
@@ -104,6 +105,7 @@ function showApp() {
     
     // Запуск приложения
     loadState();
+    migratePlatforms();
     loadSleepData();
     initGrid();
     setupEventListeners();
@@ -264,24 +266,15 @@ function renderSchedule() {
         const tPhone = tInfo && tInfo.phone ? tInfo.phone : '';
         const tPhoneHtml = tPhone ? `<div class="block-phone"><a href="tel:${tPhone}">📞 ${tPhone}</a></div>` : '';
 
-        // Иконка платформы текстом (Зум, Тимс, Телеграм)
-        let platformTextHtml = '';
-        if (tInfo && tInfo.platform) {
-            let platName = PLATFORMS[tInfo.platform] ? PLATFORMS[tInfo.platform].name : tInfo.platform;
+        // Иконка платформы — кликабельная, если есть
+        let platformBadgeHtml = '';
+        if (tInfo && tInfo.platform && PLATFORMS[tInfo.platform]) {
+            const p = PLATFORMS[tInfo.platform];
             let link = tInfo.platformLink || '#';
-            if (tInfo.platform === 'telegram') {
-               platName = 'Telegram';
-               if(tPhone && !link.includes('t.me') && !link.includes('://')) {
-                   link = `tg://resolve?phone=${tPhone.replace(/\D/g, '')}`;
-               }
-            } else if (tInfo.platform === 'zoom') {
-               platName = 'Zoom';
-            } else if (tInfo.platform === 'skype') {
-               platName = 'Skype';
-            } else {
-               platName = 'Teams'; // Default or fallback
+            if (tInfo.platform === 'telegram' && tPhone && !link.includes('t.me') && !link.includes('://')) {
+                link = `tg://resolve?phone=${tPhone.replace(/\D/g, '')}`;
             }
-            platformTextHtml = `<a href="${link}" target="_blank" class="platform-text-link">${platName}</a>`;
+            platformBadgeHtml = `<a href="${link}" target="_blank" class="platform-icon-badge" title="${p.name}" style="background:${p.color}22; border:1px solid ${p.color}44;">${p.icon}</a>`;
         }
 
         // Комментарий (если есть)
@@ -298,7 +291,7 @@ function renderSchedule() {
                 ${commentHtml}
                 <div class="block-footer-line">
                     <span class="block-duration">${item.duration} мин</span>
-                    ${platformTextHtml}
+                    ${platformBadgeHtml}
                 </div>
             </div>
         `;
@@ -356,10 +349,9 @@ function updateAnalytics(analytics) {
         const sc = SUBJECT_COLORS[name] || DEFAULT_COLOR;
         const card = document.createElement('div');
         card.className = 'subject-card';
-        card.style.borderLeftColor = sc.bg;
-        // background white, border left color matches subject
+        card.style.backgroundColor = sc.bg;
         card.innerHTML = `
-            <span class="subject-name" style="color:${sc.bg}">${name}</span>
+            <span class="subject-name">${name}</span>
             <span class="subject-hours">${(data.min / 60).toFixed(1)} ч (${data.min} м, ${data.count} з.)</span>
         `;
         subjectBreakdownArea.appendChild(card);
@@ -557,6 +549,22 @@ function setupEventListeners() {
         document.getElementById('sidebarRight').style.display = document.getElementById('sidebarRight').style.display === 'flex' ? 'none' : 'flex';
     });
 
+    // Toggle Analytics
+    const toggleAnalyticsBtn = document.getElementById('toggleAnalyticsBtn');
+    if (toggleAnalyticsBtn) {
+        toggleAnalyticsBtn.addEventListener('click', () => {
+            const body = document.getElementById('analyticsBody');
+            const isHidden = body.style.display === 'none' || body.style.display === '';
+            if (isHidden) {
+                body.style.display = 'block';
+                toggleAnalyticsBtn.textContent = '▴ Скрыть';
+            } else {
+                body.style.display = 'none';
+                toggleAnalyticsBtn.textContent = '▾ Открыть';
+            }
+        });
+    }
+
     // Click outside modal to close
     document.querySelectorAll('.modal-overlay').forEach(modal => {
         modal.addEventListener('click', e => {
@@ -636,14 +644,14 @@ function renderSubjectsList() {
     [...state.subjects].sort((a,b) => a.name.localeCompare(b.name)).forEach(s => {
         const card = document.createElement('div');
         card.className = 'teacher-card';
-        card.style.borderLeftColor = s.color;
+        card.style.padding = '0';
+        card.style.overflow = 'hidden';
+        card.style.border = 'none';
+        card.style.background = 'var(--bg-card)';
         card.innerHTML = `
-            <div class="tc-header">
-                <span class="tc-name">${s.name}</span>
-                <span class="status-badge" style="background:${s.color}; color:#fff;">Цвет</span>
-            </div>
-            <div class="tc-footer">
-                <button class="primary-btn sm-btn" onclick="editSubject('${s.id}')">📝 Изменить</button>
+            <div style="background-color: ${s.color}; color: #fff; padding: 8px 12px; font-weight: 600; font-size: 14px; display: flex; justify-content: space-between; align-items: center;">
+                <span>${s.name}</span>
+                <button class="icon-only-btn" onclick="editSubject('${s.id}')" title="Редактировать" style="border-color: rgba(255,255,255,0.3); color: white;">✏️</button>
             </div>
         `;
         list.appendChild(card);
@@ -773,27 +781,49 @@ function createTeacherCard(tInfo) {
     const card = document.createElement('div');
     card.className = `teacher-card ${tInfo.status !== 'active' ? 'teacher-inactive' : ''}`;
     
-    let pBadge = tInfo.platform && PLATFORMS[tInfo.platform] ? PLATFORMS[tInfo.platform].icon + ' ' + PLATFORMS[tInfo.platform].name : '—';
     let sBadge = tInfo.status === 'active' ? '<span class="status-badge status-active">Активен</span>' : 
                  tInfo.status === 'inactive' ? '<span class="status-badge status-inactive">Неактивен</span>' : 
                  '<span class="status-badge status-temporary">Пауза</span>';
 
+    let pLink = tInfo.platformLink || '#';
+    if (tInfo.platform === 'telegram' && pLink === '#' && tInfo.phone) {
+        pLink = `tg://resolve?phone=${tInfo.phone.replace(/[^0-9+]/g, '')}`;
+    }
+
+    // Platform icon row
+    let platformRowHtml = '';
+    if (tInfo.platform && PLATFORMS[tInfo.platform]) {
+        const p = PLATFORMS[tInfo.platform];
+        platformRowHtml = `
+            <div class="tc-platform-row">
+                <a href="${pLink}" target="_blank" class="tc-platform-icon" title="${p.name}" style="background:${p.color}22; border-color:${p.color}55;">${p.icon}</a>
+                <span class="tc-platform-label">${p.name}</span>
+            </div>`;
+    } else {
+        platformRowHtml = `<p style="color:var(--text-muted);font-size:11px;">💻 Платформа: —</p>`;
+    }
+
+    let bankName = tInfo.bank ? (document.querySelector(`#teacherBank option[value="${tInfo.bank}"]`)?.textContent || tInfo.bank) : '—';
+    let phoneHtml = tInfo.phone 
+        ? `<a href="tel:${tInfo.phone}" class="tc-phone-prominent">${tInfo.phone}</a>` 
+        : `<span style="color:var(--text-muted);font-size:12px;">— телефон не указан</span>`;
+    let nameText = tInfo.name.replace(/^Преп\.\s*/, '');
+
     card.innerHTML = `
         <div class="tc-header">
-            <span class="tc-name">${tInfo.name}</span>
+            <span class="tc-name">${nameText}</span>
             ${sBadge}
         </div>
+        ${phoneHtml}
         <div class="tc-body">
-            <p>📞 ${tInfo.phone || '—'}</p>
-            <p>📧 ${tInfo.email || '—'}</p>
-            <p>✈️ ${tInfo.telegram || '—'}</p>
-            <p>🌐 Платформа: ${pBadge}</p>
-            <p>💳 Банк: ${tInfo.bank ? document.querySelector(`#teacherBank option[value="${tInfo.bank}"]`).textContent : '—'}</p>
+            ${platformRowHtml}
+            <div class="tc-divider"></div>
+            <p>💳 Банк: ${bankName}</p>
             <p>📚 Предметы: ${tInfo.subjects || '—'}</p>
             <div class="teacher-price">💰 ${tInfo.price ? tInfo.price + ' ₽/урок' : 'Цена не указана'}</div>
         </div>
         <div class="tc-footer">
-            <button class="primary-btn sm-btn" onclick="editTeacher('${tInfo.id}')">📝 Изменить</button>
+            <button class="icon-only-btn" onclick="editTeacher('${tInfo.id}')" title="Изменить">✏️</button>
         </div>
     `;
     return card;
@@ -934,6 +964,22 @@ function saveState() {
     localStorage.setItem('subjects_v2', JSON.stringify(state.subjects));
 }
 
+// One-time migration: assign platforms to teachers who don’t have one
+function migratePlatforms() {
+    const platformKeys = ['teams', 'zoom', 'telegram', 'yandex', 'website'];
+    let changed = false;
+    state.teachers.forEach((t, i) => {
+        if (!t.platform) {
+            t.platform = platformKeys[i % platformKeys.length];
+            t.platformLink = t.platformLink || '#';
+            changed = true;
+        }
+    });
+    if (changed) {
+        localStorage.setItem(STORAGE_TEACHERS, JSON.stringify(state.teachers));
+    }
+}
+
 function loadSleepData() {
     const saved = localStorage.getItem('sleepLogs');
     state.sleepData = saved ? JSON.parse(saved) : {};
@@ -962,6 +1008,14 @@ initAuth();
 
     // Избегаем перезаписи учителей, если там уже кто-то есть от пользователя, 
     // но в рамках задачи сказано "полностью заполнить нашим расписанием"
+    localStorage.setItem('teachers_v2', JSON.stringify(tArr));
+
+    // Assign random platforms to each teacher
+    const platformKeys = ['teams', 'zoom', 'telegram', 'yandex', 'website'];
+    tArr.forEach((t, i) => {
+        t.platform = platformKeys[i % platformKeys.length];
+        t.platformLink = '#';
+    });
     localStorage.setItem('teachers_v2', JSON.stringify(tArr));
 
     let sch = {}; let sId = 1;
