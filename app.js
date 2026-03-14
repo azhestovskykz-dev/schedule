@@ -106,6 +106,8 @@ function showApp() {
     initGrid();
     setupEventListeners();
     renderSchedule();
+    renderSubjectsList();
+    renderTeachersList();
 }
 
 function applyRoles() {
@@ -234,7 +236,10 @@ function renderSchedule() {
 
         block.innerHTML = `
             ${actionsHtml}
-            <div class="block-subject">${normSubject}</div>
+            <div class="block-subject-wrapper">
+                <div class="block-subject-bar" style="background-color: ${subjColor};"></div>
+                <div class="block-subject">${normSubject}</div>
+            </div>
             <div class="block-teacher">${tNameText}</div>
             <div class="block-meta">
                 <span class="block-duration">${item.duration} мин</span>
@@ -386,12 +391,6 @@ function setupEventListeners() {
     });
 
     // Subjects Management
-    document.getElementById('manageSubjectsBtn').addEventListener('click', showSubjectsPanel);
-    document.getElementById('closeSubjectsBtn').addEventListener('click', () => {
-        document.getElementById('subjectsModal').classList.remove('active');
-        renderSchedule();
-        populateSubjectSelect();
-    });
     document.getElementById('addSubjectBtn').addEventListener('click', showAddSubjectForm);
     document.getElementById('subjectForm').addEventListener('submit', handleSubjectSubmit);
     document.getElementById('cancelSubjectEdit').addEventListener('click', () => {
@@ -400,12 +399,6 @@ function setupEventListeners() {
     document.getElementById('deleteSubjectBtn').addEventListener('click', handleDeleteSubject);
 
     // Teacher Management
-    document.getElementById('manageTeachersBtn').addEventListener('click', showTeachersPanel);
-    document.getElementById('closeTeachersBtn').addEventListener('click', () => {
-        document.getElementById('teachersModal').classList.remove('active');
-        renderSchedule();
-    });
-    
     document.getElementById('addTeacherBtn').addEventListener('click', showAddTeacherForm);
     document.getElementById('teacherForm').addEventListener('submit', handleTeacherSubmit);
     document.getElementById('cancelTeacherEdit').addEventListener('click', () => {
@@ -413,6 +406,14 @@ function setupEventListeners() {
     });
     document.getElementById('deleteTeacherBtn').addEventListener('click', handleDeleteTeacher);
     document.getElementById('teacherSortBy').addEventListener('change', renderTeachersList);
+
+    // Mobile buttons (Toggle sidebars)
+    document.getElementById('mobileSubjectsBtn').addEventListener('click', () => {
+        document.getElementById('sidebarLeft').style.display = document.getElementById('sidebarLeft').style.display === 'flex' ? 'none' : 'flex';
+    });
+    document.getElementById('mobileTeachersBtn').addEventListener('click', () => {
+        document.getElementById('sidebarRight').style.display = document.getElementById('sidebarRight').style.display === 'flex' ? 'none' : 'flex';
+    });
 
     // Click outside modal to close
     document.querySelectorAll('.modal-overlay').forEach(modal => {
@@ -485,13 +486,9 @@ window.deleteItem = function(id, e) {
 // =========================================
 // SUBJECTS LOGIC
 // =========================================
-function showSubjectsPanel() {
-    renderSubjectsList();
-    document.getElementById('subjectsModal').classList.add('active');
-}
-
 function renderSubjectsList() {
-    const list = document.getElementById('subjectsList');
+    const list = document.getElementById('sidebarSubjectsList');
+    if(!list) return;
     list.innerHTML = '';
     
     [...state.subjects].sort((a,b) => a.name.localeCompare(b.name)).forEach(s => {
@@ -593,13 +590,9 @@ function populateSubjectSelect() {
 // =========================================
 // TEACHERS LOGIC
 // =========================================
-function showTeachersPanel() {
-    renderTeachersList();
-    document.getElementById('teachersModal').classList.add('active');
-}
-
 function renderTeachersList() {
-    const list = document.getElementById('teachersList');
+    const list = document.getElementById('sidebarTeachersList');
+    if(!list) return;
     list.innerHTML = '';
     
     const sortBy = document.getElementById('teacherSortBy').value;

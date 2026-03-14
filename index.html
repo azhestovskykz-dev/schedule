@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=12">
+    <link rel="stylesheet" href="styles.css?v=13">
 </head>
 <body>
     <!-- Экран Авторизации -->
@@ -49,35 +49,65 @@
                     <span id="modeLabel">Редактирование</span>
                 </div>
                 <div class="header-actions">
-                    <button id="manageSubjectsBtn" class="primary-btn">📚 Предметы</button>
-                    <button id="manageTeachersBtn" class="primary-btn">👩‍🏫 Преподаватели</button>
+                    <button id="mobileSubjectsBtn" class="primary-btn mobile-only">📚</button>
+                    <button id="mobileTeachersBtn" class="primary-btn mobile-only">👩‍🏫</button>
                     <button id="logSleepBtn" class="secondary-btn">😴 Сон</button>
                     <button id="logoutBtn" class="danger-btn">🚪 Выйти</button>
                 </div>
             </div>
         </header>
 
-        <main class="main-content">
-            <div id="scheduleGrid" class="schedule-grid"></div>
-            
-            <section class="analytics-section">
-                <div class="analytics-header">
-                    <h2>📊 Аналитика времени</h2>
-                    <div class="global-stats">
-                        <div class="stat-card main">
-                            <span class="stat-label">Всего учебы</span>
-                            <span id="studyTimeText" class="stat-value">0 ч</span>
-                        </div>
-                        <div class="stat-card main rest">
-                            <span class="stat-label">Свободное время</span>
-                            <span id="restTimeText" class="stat-value">0 ч</span>
+        <div class="main-layout">
+            <!-- Левый сайдбар: Предметы -->
+            <aside class="sidebar left-sidebar" id="sidebarLeft">
+                <div class="sidebar-header">
+                    <h2>📚 Предметы</h2>
+                    <button type="button" id="addSubjectBtn" class="primary-btn sm-btn">➕</button>
+                </div>
+                <div id="sidebarSubjectsList" class="sidebar-list"></div>
+            </aside>
+
+            <!-- По центру: Расписание -->
+            <main class="main-content">
+                <div class="schedule-wrapper">
+                    <div id="scheduleGrid" class="schedule-grid"></div>
+                </div>
+                
+                <section class="analytics-section">
+                    <div class="analytics-header">
+                        <h2>📊 Аналитика времени</h2>
+                        <div class="global-stats">
+                            <div class="stat-card main">
+                                <span class="stat-label">Всего учебы</span>
+                                <span id="studyTimeText" class="stat-value">0 ч</span>
+                            </div>
+                            <div class="stat-card main rest">
+                                <span class="stat-label">Свободное время</span>
+                                <span id="restTimeText" class="stat-value">0 ч</span>
+                            </div>
                         </div>
                     </div>
+                    <div id="subjectBreakdownArea" class="subject-breakdown"></div>
+                </section>
+            </main>
+
+            <!-- Правый сайдбар: Преподаватели -->
+            <aside class="sidebar right-sidebar" id="sidebarRight">
+                <div class="sidebar-header">
+                    <h2>👩‍🏫 Преподаватели</h2>
+                    <button type="button" id="addTeacherBtn" class="primary-btn sm-btn">➕</button>
                 </div>
-                <div id="subjectBreakdownArea" class="subject-breakdown"></div>
-            </section>
-        </main>
-    </div>
+                <div class="sidebar-toolbar">
+                    <select id="teacherSortBy">
+                        <option value="subject">По предмету</option>
+                        <option value="price">По стоимости</option>
+                        <option value="status">По статусу</option>
+                        <option value="name">По Имени</option>
+                    </select>
+                </div>
+                <div id="sidebarTeachersList" class="sidebar-list"></div>
+            </aside>
+        </div>
 
     <!-- Модальное окно редактирования занятия -->
     <div id="modalOverlay" class="modal-overlay">
@@ -117,21 +147,7 @@
         </div>
     </div>
 
-    <!-- Модальное окно предметов -->
-    <div id="subjectsModal" class="modal-overlay">
-        <div class="modal-content wide subjects-panel">
-            <div class="teachers-header">
-                <h2>📚 Управление предметами</h2>
-                <div class="teachers-toolbar">
-                    <button type="button" id="addSubjectBtn" class="primary-btn sm-btn">➕ Добавить</button>
-                </div>
-            </div>
-            <div id="subjectsList" class="teachers-list"></div>
-            <div class="modal-actions">
-                <button type="button" id="closeSubjectsBtn" class="secondary-btn">Закрыть</button>
-            </div>
-        </div>
-    </div>
+
 
     <!-- Карточка редактирования предмета -->
     <div id="subjectEditModal" class="modal-overlay">
@@ -156,27 +172,7 @@
         </div>
     </div>
 
-    <!-- Модальное окно преподавателей -->
-    <div id="teachersModal" class="modal-overlay">
-        <div class="modal-content wide teachers-panel">
-            <div class="teachers-header">
-                <h2>👩‍🏫 Преподаватели</h2>
-                <div class="teachers-toolbar">
-                    <select id="teacherSortBy">
-                        <option value="subject">По предмету</option>
-                        <option value="price">По стоимости</option>
-                        <option value="status">По статусу</option>
-                        <option value="name">По имени</option>
-                    </select>
-                    <button type="button" id="addTeacherBtn" class="primary-btn sm-btn">➕ Добавить</button>
-                </div>
-            </div>
-            <div id="teachersList" class="teachers-list"></div>
-            <div class="modal-actions">
-                <button type="button" id="closeTeachersBtn" class="secondary-btn">Закрыть</button>
-            </div>
-        </div>
-    </div>
+
 
     <!-- Карточка редактирования преподавателя -->
     <div id="teacherEditModal" class="modal-overlay">
@@ -300,6 +296,6 @@
         </div>
     </div>
 
-    <script src="app.js?v=12"></script>
+    <script src="app.js?v=13"></script>
 </body>
 </html>
