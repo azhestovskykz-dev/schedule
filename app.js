@@ -193,7 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
             card.style.background = sc.bg;
             card.innerHTML = `
                 <span class="subject-name" style="color:${sc.text}">${name}</span>
-                <span class="subject-hours">${(data.min / 60).toFixed(1)} ч <small>(${data.min} мин, ${data.count} зан.)</small></span>
+                <span class="subject-hours">${(data.min / 60).toFixed(1)} ч (${data.min} мин, ${data.count} зан.)</span>
             `;
             subjectBreakdownArea.appendChild(card);
         });
