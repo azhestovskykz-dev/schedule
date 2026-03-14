@@ -643,9 +643,9 @@ function switchTab(isDraft) {
     renderSchedule();
 }
 
-const STORAGE_KEY_ACTIVE = 'schedule_data_v2';
-const STORAGE_KEY_DRAFT = 'schedule_draft_v2';
-const STORAGE_TEACHERS = 'schedule_teachers';
+const STORAGE_KEY_ACTIVE = 'schedule_active';
+const STORAGE_KEY_DRAFT = 'schedule_draft';
+const STORAGE_TEACHERS = 'teachers_v2';
 
 function loadState() {
     const key = state.isDraft ? STORAGE_KEY_DRAFT : STORAGE_KEY_ACTIVE;
@@ -663,7 +663,7 @@ function saveState() {
 }
 
 function loadSleepData() {
-    const saved = localStorage.getItem('schedule_sleep');
+    const saved = localStorage.getItem('sleepLogs');
     state.sleepData = saved ? JSON.parse(saved) : {};
 }
 
