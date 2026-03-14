@@ -4,18 +4,41 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Интерактивное Расписание</title>
-    <link rel="stylesheet" href="styles.css?v=4">
+    <link rel="stylesheet" href="styles.css?v=5">
 </head>
 <body>
-    <div id="app">
+    <!-- Экран Авторизации -->
+    <div id="loginOverlay" class="login-overlay active">
+        <div class="login-box">
+            <h2>🔐 Привет! Кто ты?</h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">Имя пользователя:</label>
+                    <select id="username" required>
+                        <option value="">— Выбери имя —</option>
+                        <option value="admin">Андрей (Админ)</option>
+                        <option value="user">Никита (Только просмотр)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="password">Пароль:</label>
+                    <input type="password" id="password" required placeholder="Введите пароль">
+                </div>
+                <button type="submit" class="primary-btn w-100">Войти</button>
+                <div id="loginError" class="login-error">Неверный пароль!</div>
+            </form>
+        </div>
+    </div>
+
+    <div id="app" style="display: none;">
         <header>
-            <div class="logo">📅 Мое Расписание</div>
+            <div class="logo">📅 Мое Расписание <span id="currentUserDisplay" class="user-badge"></span></div>
             <div class="header-controls">
-                <div class="version-tabs">
+                <div class="version-tabs" id="versionTabs">
                     <button id="activeTab" class="tab-btn active">Текущее</button>
                     <button id="draftTab" class="tab-btn">Черновик</button>
                 </div>
-                <div class="mode-toggle">
+                <div class="mode-toggle" id="editModeToggleGroup">
                     <label class="switch">
                         <input type="checkbox" id="modeToggle" checked>
                         <span class="slider round"></span>
@@ -25,6 +48,7 @@
                 <div class="header-actions">
                     <button id="manageTeachersBtn" class="primary-btn">👩‍🏫 Преподаватели</button>
                     <button id="logSleepBtn" class="secondary-btn">😴 Сон</button>
+                    <button id="logoutBtn" class="danger-btn">🚪 Выйти</button>
                 </div>
             </div>
         </header>
@@ -248,6 +272,6 @@
         </div>
     </div>
 
-    <script src="app.js?v=4"></script>
+    <script src="app.js?v=5"></script>
 </body>
 </html>
