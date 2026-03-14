@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=15">
+    <link rel="stylesheet" href="styles.css?v=16">
 </head>
 <body>
     <!-- Экран Авторизации -->
@@ -297,6 +297,16 @@
         </div>
     </div>
 
-    <script src="app.js?v=15"></script>
+    <!-- Контекстное меню (ПКМ) -->
+    <div id="contextMenu" class="context-menu">
+        <a href="#" id="cmCall" class="menu-item"><i>📞</i> Позвонить</a>
+        <a href="#" id="cmWrite" class="menu-item" target="_blank"><i>💬</i> Написать (Telegram)</a>
+        <div class="context-menu-divider"></div>
+        <div id="cmComment" class="menu-item"><i>💬</i> Комментарий</div>
+        <div id="cmEdit" class="menu-item"><i>📝</i> Редактировать</div>
+        <div id="cmDelete" class="menu-item danger"><i>🗑</i> Удалить</div>
+    </div>
+
+    <script src="app.js?v=16"></script>
 </body>
 </html>

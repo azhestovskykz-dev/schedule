@@ -174,8 +174,8 @@ header .primary-btn:hover, header .secondary-btn:hover {
 /* Layout 3 columns */
 .main-layout { display: flex; height: calc(100vh - 61px); overflow: hidden; background-color: var(--bg-dark); }
 
-.sidebar { width: 280px; background: rgba(15, 23, 42, 0.95); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; flex-shrink: 0; backdrop-filter: var(--glass-blur); }
-.sidebar.right-sidebar { border-right: none; border-left: 1px solid var(--border-color); width: 320px; }
+.sidebar { width: 220px; background: rgba(15, 23, 42, 0.95); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; flex-shrink: 0; backdrop-filter: var(--glass-blur); transition: width 0.3s; }
+.sidebar.right-sidebar { border-right: none; border-left: 1px solid var(--border-color); width: 260px; }
 .sidebar-header { padding: 15px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: transparent; }
 .sidebar-header h2 { font-size: 16px; margin: 0; font-weight: 600; color: var(--text-main); }
 .sidebar-toolbar { padding: 10px 15px; border-bottom: 1px solid var(--border-color); background: transparent; }
@@ -191,7 +191,8 @@ header .primary-btn:hover, header .secondary-btn:hover {
     border: 1px solid var(--border-color);
     border-radius: 12px;
     padding: 1px;
-    width: max-content; /* Fit to content so it won't stretch */
+    width: 100%; /* Занимает всю доступную ширину */
+    min-width: 800px; /* Минимальная ширина для скролла на мобильных */
     box-shadow: var(--glass-shadow);
     grid-auto-rows: minmax(40px, auto);
 }
@@ -228,36 +229,22 @@ header .primary-btn:hover, header .secondary-btn:hover {
 }
 
 .schedule-block.variant-2 {
-    border: 2px solid var(--subject-color) !important;
+    border: 1px solid var(--subject-color) !important;
     padding: 0; gap: 0; overflow: hidden;
 }
 .variant-2 .v2-top {
-    padding: 6px 10px;
+    padding: 4px 8px;
+    font-size: 13px;
+    font-weight: 600;
 }
 .variant-2 .block-details {
-    padding: 6px 10px;
+    padding: 6px 8px;
+    background-color: var(--bg-card);
 }
 
-.schedule-block.variant-3 {
-    border: 1px solid var(--border-color) !important;
-    padding: 8px 10px; gap: 6px;
-}
-.variant-3 .v3-top .block-subject-line {
-    height: 1px; width: 100%; margin-top: 4px;
-}
-
-.schedule-block.variant-4 {
-    border: 1px solid var(--border-color) !important;
-    padding: 8px 10px; gap: 6px;
-    border-left: 4px solid var(--subject-color) !important;
-}
-
-.schedule-block.variant-default {
-    padding: 8px 10px; gap: 6px;
-}
 .block-subject-wrapper { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; width: 100%; }
 .block-subject-bar { height: 6px; border-radius: 3px; width: 100%; transition: width 0.3s; }
-.block-details { display: flex; flex-direction: column; gap: 4px; width: 100%; }
+.block-details { display: flex; flex-direction: column; gap: 2px; width: 100%; }
 
 /* Icons in blocks */
 .block-actions {
@@ -276,18 +263,34 @@ header .primary-btn:hover, header .secondary-btn:hover {
 .action-icon:hover { background: rgba(255, 255, 255, 0.2); }
 .delete-icon:hover { color: var(--error-color); }
 
-.block-subject { font-weight: 500; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.4; }
-.block-teacher { font-weight: 400; font-size: 13px; color: var(--text-muted); opacity: 0.9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
-.block-meta { display: flex; justify-content: space-between; align-items: center; margin-top: 2px; }
+.block-subject { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.block-teacher { font-weight: 500; font-size: 13px; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+.block-phone { margin-top: 2px; }
+.block-phone a { color: var(--text-muted); text-decoration: none; font-size: 12px; font-weight: 500; transition: color 0.2s; }
+.block-phone a:hover { color: var(--primary-color); }
+
+.block-comment {
+    font-size: 12px;
+    color: var(--secondary-color);
+    margin-top: 2px;
+    background: rgba(139, 92, 246, 0.1);
+    padding: 2px 4px;
+    border-radius: 4px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.block-footer-line { 
+    display: flex; justify-content: space-between; align-items: center; 
+    margin-top: 4px; padding-top: 4px; 
+    border-top: 1px solid var(--border-color); 
+}
 .block-duration { color: var(--text-muted); font-size: 12px; font-weight: 500; }
 
-.platform-badge {
-    background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 6px;
-    font-weight: 500; font-size: 12px; color: var(--text-main);
+.platform-text-link {
+    font-weight: 600; font-size: 12px; color: var(--primary-color);
     text-decoration: none; display: flex; align-items: center; gap: 4px;
-    border: 1px solid var(--border-color);
 }
-.platform-badge:hover { background: rgba(255,255,255,0.2); }
+.platform-text-link:hover { text-decoration: underline; }
 
 /* Drag & Drop */
 .grid-cell.drag-over { background: rgba(59, 130, 246, 0.2); border: 1px dashed var(--primary-color); }
@@ -324,6 +327,62 @@ header .primary-btn:hover, header .secondary-btn:hover {
 .checkbox-label input { width: auto; margin: 0; }
 
 .modal-actions { display: flex; gap: 0.8rem; justify-content: flex-end; margin-top: 1rem; border-top: 1px solid var(--border-color); padding-top: 1rem; }
+
+/* =========================================
+   CONTEXT MENU (Right Click)
+   ========================================= */
+.context-menu {
+    position: fixed;
+    z-index: 10000;
+    width: 220px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    border-radius: 12px;
+    padding: 8px 0;
+    backdrop-filter: var(--glass-blur);
+    display: none; /* hidden by default */
+    flex-direction: column;
+}
+
+.context-menu.active {
+    display: flex;
+}
+
+.context-menu .menu-item {
+    padding: 10px 16px;
+    font-size: 14px;
+    color: var(--text-main);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: background 0.2s;
+    text-decoration: none;
+}
+
+.context-menu .menu-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.context-menu .menu-item i {
+    width: 20px;
+    text-align: center;
+    font-style: normal;
+    font-size: 16px;
+}
+
+.context-menu .menu-item.danger {
+    color: var(--error-color);
+}
+.context-menu .menu-item.danger:hover {
+    background: rgba(239, 68, 68, 0.15);
+}
+.context-menu-divider {
+    height: 1px;
+    background: var(--border-color);
+    margin: 4px 0;
+}
 
 /* Fieldsets for teacher modal */
 .form-section { border: 1px solid var(--border-color); border-radius: 8px; padding: 0.8rem; margin-bottom: 1rem; background: transparent; }

@@ -107,6 +107,7 @@ function showApp() {
     loadSleepData();
     initGrid();
     setupEventListeners();
+    setupContextMenu();
     renderSchedule();
     renderSubjectsList();
     renderTeachersList();
@@ -242,15 +243,7 @@ function renderSchedule() {
         block.style.setProperty('--subject-color', subjColor);
         block.draggable = state.editMode;
         block.dataset.id = item.id;
-        
-        let variantClass = 'variant-default';
-        const lowerName = normSubject.toLowerCase();
-        if (lowerName.includes('математика')) variantClass = 'variant-1';
-        else if (lowerName.includes('русск')) variantClass = 'variant-2';
-        else if (lowerName.includes('логопед') || lowerName.includes('агапе')) variantClass = 'variant-3';
-        else if (lowerName.includes('английск')) variantClass = 'variant-4';
-        
-        block.className = `schedule-block ${variantClass}`;
+        block.className = `schedule-block variant-2`; // Применяем всем единый стиль (Вариант 2)
         
         let actionsHtml = '';
         if (state.editMode) {
@@ -262,51 +255,50 @@ function renderSchedule() {
             `;
         }
 
-        let topHtml = '';
-        if (variantClass === 'variant-1') {
-            topHtml = `
-                <div class="block-subject-wrapper v1-top">
-                    <div class="block-subject">${normSubject}</div>
-                    <div class="block-subject-line" style="background-color: ${subjColor};"></div>
-                </div>
-            `;
-        } else if (variantClass === 'variant-2') {
-            topHtml = `
-                <div class="block-subject-wrapper v2-top" style="background-color: ${subjColor};">
-                    <div class="block-subject" style="color: #fff;">${normSubject}</div>
-                </div>
-            `;
-        } else if (variantClass === 'variant-3') {
-            topHtml = `
-                <div class="block-subject-wrapper v3-top">
-                    <div class="block-subject" style="color: ${subjColor}; font-weight: 700;">${normSubject}</div>
-                    <div class="block-subject-line" style="background-color: ${subjColor};"></div>
-                </div>
-            `;
-        } else if (variantClass === 'variant-4') {
-            topHtml = `
-                <div class="block-subject-wrapper v4-top">
-                    <div class="block-subject-bar" style="background-color: ${subjColor};"></div>
-                    <div class="block-subject">${normSubject}</div>
-                </div>
-            `;
-        } else {
-            topHtml = `
-                <div class="block-subject-wrapper">
-                    <div class="block-subject-bar" style="background-color: ${subjColor};"></div>
-                    <div class="block-subject">${normSubject}</div>
-                </div>
-            `;
+        let topHtml = `
+            <div class="block-subject-wrapper v2-top" style="background-color: ${subjColor};">
+                <div class="block-subject" style="color: #fff;">${normSubject}</div>
+            </div>
+        `;
+        // Добавляем телефон, если есть
+        const tPhone = tInfo && tInfo.phone ? tInfo.phone : '';
+        const tPhoneHtml = tPhone ? `<div class="block-phone"><a href="tel:${tPhone}">📞 ${tPhone}</a></div>` : '';
+
+        // Иконка платформы текстом (Зум, Тимс, Телеграм)
+        let platformTextHtml = '';
+        if (tInfo && tInfo.platform) {
+            let platName = PLATFORMS[tInfo.platform] ? PLATFORMS[tInfo.platform].name : tInfo.platform;
+            let link = tInfo.platformLink || '#';
+            if (tInfo.platform === 'telegram') {
+               platName = 'Telegram';
+               if(tPhone && !link.includes('t.me') && !link.includes('://')) {
+                   link = `tg://resolve?phone=${tPhone.replace(/\D/g, '')}`;
+               }
+            } else if (tInfo.platform === 'zoom') {
+               platName = 'Zoom';
+            } else if (tInfo.platform === 'skype') {
+               platName = 'Skype';
+            } else {
+               platName = 'Teams'; // Default or fallback
+            }
+            platformTextHtml = `<a href="${link}" target="_blank" class="platform-text-link">${platName}</a>`;
         }
+
+        // Комментарий (если есть)
+        const commentHtml = item.comment 
+            ? `<div class="block-comment" title="${item.comment}">💬 ${item.comment}</div>` 
+            : '';
 
         block.innerHTML = `
             ${actionsHtml}
             ${topHtml}
             <div class="block-details">
                 <div class="block-teacher">${tNameText}</div>
-                <div class="block-meta">
+                ${tPhoneHtml}
+                ${commentHtml}
+                <div class="block-footer-line">
                     <span class="block-duration">${item.duration} мин</span>
-                    ${tPlatform}
+                    ${platformTextHtml}
                 </div>
             </div>
         `;
@@ -315,6 +307,9 @@ function renderSchedule() {
             block.addEventListener('dragstart', handleDragStart);
             block.addEventListener('dragend', handleDragEnd);
         }
+        
+        // Context menu listener
+        block.addEventListener('contextmenu', (e) => handleContextMenu(e, item, tInfo));
         
         cell.appendChild(block);
     });
@@ -369,6 +364,89 @@ function updateAnalytics(analytics) {
         `;
         subjectBreakdownArea.appendChild(card);
     });
+}
+
+// =========================================
+// CONTEXT MENU LOGIC (Right Click)
+// =========================================
+function setupContextMenu() {
+    // Закрытие меню по клику в любом месте экрана
+    document.addEventListener('click', (e) => {
+        const menu = document.getElementById('contextMenu');
+        if (menu && menu.classList.contains('active')) {
+            menu.classList.remove('active');
+        }
+    });
+
+    // Обработчики кнопок меню
+    document.getElementById('cmEdit').addEventListener('click', (e) => {
+        const id = state.contextMenuTargetId;
+        if (id) window.editItem(id, e);
+    });
+
+    document.getElementById('cmDelete').addEventListener('click', (e) => {
+        const id = state.contextMenuTargetId;
+        if (id) window.deleteItem(id, e);
+    });
+
+    document.getElementById('cmComment').addEventListener('click', (e) => {
+        const id = state.contextMenuTargetId;
+        if (!id) return;
+        const item = state.schedule[id];
+        const text = prompt('Введите комментарий к занятию:', item.comment || '');
+        if (text !== null) {
+            item.comment = text.trim();
+            saveState();
+            renderSchedule();
+        }
+    });
+}
+
+function handleContextMenu(e, item, tInfo) {
+    if (!state.editMode) return; // Меню доступно только в режиме редактирования/админа
+    e.preventDefault(); // Отменяем стандартное меню браузера
+
+    const menu = document.getElementById('contextMenu');
+    state.contextMenuTargetId = item.id; // Запоминаем, для какого элемента открыли
+
+    // Настраиваем кнопку "Позвонить"
+    const callBtn = document.getElementById('cmCall');
+    if (tInfo && tInfo.phone) {
+        callBtn.style.display = 'flex';
+        callBtn.href = `tel:${tInfo.phone}`;
+    } else {
+        callBtn.style.display = 'none';
+        callBtn.href = '#';
+    }
+
+    // Настраиваем кнопку "Написать" (Telegram)
+    const writeBtn = document.getElementById('cmWrite');
+    if (tInfo && tInfo.platform === 'telegram' && (tInfo.platformLink || tInfo.phone)) {
+        writeBtn.style.display = 'flex';
+        let link = tInfo.platformLink;
+        if (!link || (!link.includes('t.me') && !link.includes('://'))) {
+            link = `tg://resolve?phone=${tInfo.phone.replace(/[^0-9+]/g, '')}`;
+        }
+        writeBtn.href = link;
+    } else {
+        writeBtn.style.display = 'none';
+        writeBtn.href = '#';
+    }
+
+    // Позиционируем меню
+    menu.classList.add('active');
+    
+    // Проверяем, не вылезает ли меню за пределы экрана
+    let x = e.clientX;
+    let y = e.clientY;
+    const menuWidth = menu.offsetWidth || 220;
+    const menuHeight = menu.offsetHeight || 180;
+    
+    if (x + menuWidth > window.innerWidth) x = window.innerWidth - menuWidth - 10;
+    if (y + menuHeight > window.innerHeight) y = window.innerHeight - menuHeight - 10;
+
+    menu.style.left = `${x}px`;
+    menu.style.top = `${y}px`;
 }
 
 // =========================================
