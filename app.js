@@ -9,6 +9,8 @@ let state = {
     isDraft: false,
     teachers: [],
     editingTeacherId: null,
+    subjects: [],
+    editingSubjectId: null,
     currentUser: null, // "admin" (Андрей) или "user" (Никита)
     sleepData: {}
 };
@@ -211,12 +213,12 @@ function renderSchedule() {
             ? `<a href="${tInfo.platformLink || '#'}" target="_blank" class="platform-badge" title="${PLATFORMS[tInfo.platform].name}">${PLATFORMS[tInfo.platform].icon} ${PLATFORMS[tInfo.platform].name}</a>` 
             : '';
 
-        const colors = SUBJECT_COLORS[normSubject] || DEFAULT_COLOR;
+        const subjObj = state.subjects.find(s => s.name === normSubject);
+        const subjColor = subjObj ? subjObj.color : (SUBJECT_COLORS[normSubject] ? SUBJECT_COLORS[normSubject].bg : DEFAULT_COLOR.bg);
 
         const block = document.createElement('div');
         block.className = 'schedule-block';
-        block.style.backgroundColor = colors.bg;
-        block.style.color = colors.text;
+        block.style.setProperty('--subject-color', subjColor);
         block.draggable = state.editMode;
         block.dataset.id = item.id;
         
@@ -356,6 +358,7 @@ function setupEventListeners() {
         state.editingId = null;
         
         populateTeacherSelect();
+        populateSubjectSelect();
         document.getElementById('scheduleForm').reset();
         document.getElementById('modalTitle').textContent = `Занятие (${state.currentDay} ${state.currentTime})`;
         document.getElementById('modalOverlay').classList.add('active');
@@ -381,6 +384,20 @@ function setupEventListeners() {
     document.getElementById('closeModalBtn').addEventListener('click', () => {
         document.getElementById('modalOverlay').classList.remove('active');
     });
+
+    // Subjects Management
+    document.getElementById('manageSubjectsBtn').addEventListener('click', showSubjectsPanel);
+    document.getElementById('closeSubjectsBtn').addEventListener('click', () => {
+        document.getElementById('subjectsModal').classList.remove('active');
+        renderSchedule();
+        populateSubjectSelect();
+    });
+    document.getElementById('addSubjectBtn').addEventListener('click', showAddSubjectForm);
+    document.getElementById('subjectForm').addEventListener('submit', handleSubjectSubmit);
+    document.getElementById('cancelSubjectEdit').addEventListener('click', () => {
+        document.getElementById('subjectEditModal').classList.remove('active');
+    });
+    document.getElementById('deleteSubjectBtn').addEventListener('click', handleDeleteSubject);
 
     // Teacher Management
     document.getElementById('manageTeachersBtn').addEventListener('click', showTeachersPanel);
@@ -438,6 +455,7 @@ window.editItem = function(id, e) {
     state.currentTime = item.time;
     
     populateTeacherSelect();
+    populateSubjectSelect();
     
     // Нормализация при открытии радактора
     let nSubj = item.subject;
@@ -462,6 +480,114 @@ window.deleteItem = function(id, e) {
         saveState();
         renderSchedule();
     }
+}
+
+// =========================================
+// SUBJECTS LOGIC
+// =========================================
+function showSubjectsPanel() {
+    renderSubjectsList();
+    document.getElementById('subjectsModal').classList.add('active');
+}
+
+function renderSubjectsList() {
+    const list = document.getElementById('subjectsList');
+    list.innerHTML = '';
+    
+    [...state.subjects].sort((a,b) => a.name.localeCompare(b.name)).forEach(s => {
+        const card = document.createElement('div');
+        card.className = 'teacher-card';
+        card.style.borderLeftColor = s.color;
+        card.innerHTML = `
+            <div class="tc-header">
+                <span class="tc-name">${s.name}</span>
+                <span class="status-badge" style="background:${s.color}; color:#fff;">Цвет</span>
+            </div>
+            <div class="tc-footer">
+                <button class="primary-btn sm-btn" onclick="editSubject('${s.id}')">📝 Изменить</button>
+            </div>
+        `;
+        list.appendChild(card);
+    });
+}
+
+window.editSubject = function(id) {
+    const s = state.subjects.find(x => x.id === id);
+    if (!s) return;
+    state.editingSubjectId = id;
+    
+    document.getElementById('subjectEditTitle').textContent = `📝 Редактировать предмет`;
+    document.getElementById('editSubjectId').value = s.id;
+    document.getElementById('subjNameInput').value = s.name;
+    document.getElementById('subjColorInput').value = s.color;
+    
+    document.getElementById('deleteSubjectBtn').style.display = 'block';
+    document.getElementById('subjectEditModal').classList.add('active');
+};
+
+function showAddSubjectForm() {
+    state.editingSubjectId = null;
+    document.getElementById('subjectForm').reset();
+    document.getElementById('subjectEditTitle').textContent = `➕ Новый предмет`;
+    document.getElementById('subjColorInput').value = '#0984e3';
+    document.getElementById('deleteSubjectBtn').style.display = 'none';
+    document.getElementById('subjectEditModal').classList.add('active');
+}
+
+function handleSubjectSubmit(e) {
+    e.preventDefault();
+    const sData = {
+        name: document.getElementById('subjNameInput').value.trim() || 'Без названия',
+        color: document.getElementById('subjColorInput').value
+    };
+
+    if (state.editingSubjectId) {
+        const idx = state.subjects.findIndex(x => x.id === state.editingSubjectId);
+        if (idx !== -1) {
+            const oldName = state.subjects[idx].name;
+            if (oldName !== sData.name) {
+                Object.values(state.schedule).forEach(item => {
+                    if(item.subject === oldName) item.subject = sData.name;
+                });
+            }
+            state.subjects[idx] = { id: state.editingSubjectId, ...sData };
+        }
+    } else {
+        sData.id = 'SUBJ_' + Date.now();
+        state.subjects.push(sData);
+    }
+    
+    saveState();
+    document.getElementById('subjectEditModal').classList.remove('active');
+    renderSubjectsList();
+    renderSchedule();
+    populateSubjectSelect();
+}
+
+function handleDeleteSubject() {
+    if (!state.editingSubjectId) return;
+    if (confirm('Точно удалить этот предмет?')) {
+        state.subjects = state.subjects.filter(x => x.id !== state.editingSubjectId);
+        saveState();
+        document.getElementById('subjectEditModal').classList.remove('active');
+        renderSubjectsList();
+        renderSchedule();
+        populateSubjectSelect();
+    }
+}
+
+function populateSubjectSelect() {
+    const sel = document.getElementById('subjectInput');
+    const currentVal = sel.value;
+    sel.innerHTML = '<option value="">— Выберите предмет —</option>';
+    
+    [...state.subjects].sort((a,b) => a.name.localeCompare(b.name)).forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.name;
+        opt.textContent = s.name;
+        sel.appendChild(opt);
+    });
+    if(currentVal) sel.value = currentVal;
 }
 
 // =========================================
@@ -654,12 +780,23 @@ function loadState() {
     
     const teachersSaved = localStorage.getItem(STORAGE_TEACHERS);
     state.teachers = teachersSaved ? JSON.parse(teachersSaved) : [];
+
+    const subjSaved = localStorage.getItem('subjects_v2');
+    if (subjSaved) {
+        state.subjects = JSON.parse(subjSaved);
+    } else {
+        state.subjects = Object.keys(SUBJECT_COLORS).map((name, i) => ({
+            id: 'S_' + i, name: name, color: SUBJECT_COLORS[name].bg
+        }));
+        localStorage.setItem('subjects_v2', JSON.stringify(state.subjects));
+    }
 }
 
 function saveState() {
     const key = state.isDraft ? STORAGE_KEY_DRAFT : STORAGE_KEY_ACTIVE;
     localStorage.setItem(key, JSON.stringify(state.schedule));
     localStorage.setItem(STORAGE_TEACHERS, JSON.stringify(state.teachers));
+    localStorage.setItem('subjects_v2', JSON.stringify(state.subjects));
 }
 
 function loadSleepData() {

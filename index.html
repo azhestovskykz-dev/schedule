@@ -6,8 +6,8 @@
     <title>Интерактивное Расписание</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=11">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css?v=12">
 </head>
 <body>
     <!-- Экран Авторизации -->
@@ -49,6 +49,7 @@
                     <span id="modeLabel">Редактирование</span>
                 </div>
                 <div class="header-actions">
+                    <button id="manageSubjectsBtn" class="primary-btn">📚 Предметы</button>
                     <button id="manageTeachersBtn" class="primary-btn">👩‍🏫 Преподаватели</button>
                     <button id="logSleepBtn" class="secondary-btn">😴 Сон</button>
                     <button id="logoutBtn" class="danger-btn">🚪 Выйти</button>
@@ -88,21 +89,6 @@
                     <label for="subjectInput">📚 Предмет:</label>
                     <select id="subjectInput" required>
                         <option value="">— Выберите предмет —</option>
-                        <option value="Английский">Английский</option>
-                        <option value="Математика">Математика</option>
-                        <option value="Каллиграфия">Каллиграфия</option>
-                        <option value="Логопедия">Логопедия</option>
-                        <option value="Речь">Речь</option>
-                        <option value="Русский">Русский</option>
-                        <option value="Скорочтение">Скорочтение</option>
-                        <option value="Дефектолог">Дефектолог</option>
-                        <option value="Баскетбол">Баскетбол</option>
-                        <option value="Волейбол">Волейбол</option>
-                        <option value="Бассейн">Бассейн</option>
-                        <option value="Айкидо">Айкидо</option>
-                        <option value="Шахматы">Шахматы</option>
-                        <option value="Барабаны">Барабаны</option>
-                        <option value="Массаж">Массаж</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -125,6 +111,45 @@
                 </div>
                 <div class="modal-actions">
                     <button type="button" id="closeModalBtn" class="secondary-btn">Отмена</button>
+                    <button type="submit" class="primary-btn">💾 Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модальное окно предметов -->
+    <div id="subjectsModal" class="modal-overlay">
+        <div class="modal-content wide subjects-panel">
+            <div class="teachers-header">
+                <h2>📚 Управление предметами</h2>
+                <div class="teachers-toolbar">
+                    <button type="button" id="addSubjectBtn" class="primary-btn sm-btn">➕ Добавить</button>
+                </div>
+            </div>
+            <div id="subjectsList" class="teachers-list"></div>
+            <div class="modal-actions">
+                <button type="button" id="closeSubjectsBtn" class="secondary-btn">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Карточка редактирования предмета -->
+    <div id="subjectEditModal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 id="subjectEditTitle">📝 Редактировать предмет</h2>
+            <form id="subjectForm">
+                <input type="hidden" id="editSubjectId">
+                <div class="form-group">
+                    <label for="subjNameInput">Название предмета:</label>
+                    <input type="text" id="subjNameInput" required placeholder="Например: Логопедия">
+                </div>
+                <div class="form-group">
+                    <label for="subjColorInput">Цвет (окантовка):</label>
+                    <input type="color" id="subjColorInput" value="#0984e3">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" id="deleteSubjectBtn" class="danger-btn">🗑 Удалить</button>
+                    <button type="button" id="cancelSubjectEdit" class="secondary-btn">Отмена</button>
                     <button type="submit" class="primary-btn">💾 Сохранить</button>
                 </div>
             </form>
@@ -275,6 +300,6 @@
         </div>
     </div>
 
-    <script src="app.js?v=11"></script>
+    <script src="app.js?v=12"></script>
 </body>
 </html>
