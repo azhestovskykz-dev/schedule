@@ -17,6 +17,21 @@
     --transition-speed: 0.3s;
 }
 
+:root.theme-light {
+    --primary-color: #3B82F6;
+    --primary-hover: #2563EB;
+    --secondary-color: #8B5CF6;
+    --bg-dark: #F5F7FA;
+    --bg-card: rgba(255, 255, 255, 0.85);
+    --text-main: #0F172A;
+    --text-muted: #475569;
+    --border-color: rgba(0, 0, 0, 0.08);
+    --error-color: #EF4444;
+    --success-color: #10B981;
+    
+    --glass-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.05);
+}
+
 /* =========================================
    СТРОГИЙ ЕДИНЫЙ ШРИФТ ДЛЯ ВСЕХ ЭЛЕМЕНТОВ
    ========================================= */
@@ -191,21 +206,58 @@ header .primary-btn:hover, header .secondary-btn:hover {
 /* Blocks */
 .schedule-block {
     position: relative; 
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--border-color);
     background-color: var(--bg-card) !important;
     color: var(--text-main) !important;
-    padding: 8px 10px;
     border-radius: 10px; 
     box-shadow: var(--glass-shadow);
     backdrop-filter: blur(4px);
     transition: transform 0.2s, box-shadow 0.2s; cursor: grab;
-    display: flex; flex-direction: column; gap: 6px;
+    display: flex; flex-direction: column;
     min-height: 0; overflow: hidden;
 }
-.schedule-block:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3); border-color: rgba(255, 255, 255, 0.3); }
+.schedule-block:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15); border-color: rgba(255, 255, 255, 0.3); }
 
-.block-subject-wrapper { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+/* Block variants (1 to 4) */
+.schedule-block.variant-1 {
+    border: 2px solid var(--subject-color) !important;
+    padding: 8px 10px; gap: 6px;
+}
+.variant-1 .v1-top .block-subject-line {
+    height: 3px; border-radius: 2px; width: 100%; margin-top: 4px;
+}
+
+.schedule-block.variant-2 {
+    border: 2px solid var(--subject-color) !important;
+    padding: 0; gap: 0; overflow: hidden;
+}
+.variant-2 .v2-top {
+    padding: 6px 10px;
+}
+.variant-2 .block-details {
+    padding: 6px 10px;
+}
+
+.schedule-block.variant-3 {
+    border: 1px solid var(--border-color) !important;
+    padding: 8px 10px; gap: 6px;
+}
+.variant-3 .v3-top .block-subject-line {
+    height: 1px; width: 100%; margin-top: 4px;
+}
+
+.schedule-block.variant-4 {
+    border: 1px solid var(--border-color) !important;
+    padding: 8px 10px; gap: 6px;
+    border-left: 4px solid var(--subject-color) !important;
+}
+
+.schedule-block.variant-default {
+    padding: 8px 10px; gap: 6px;
+}
+.block-subject-wrapper { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; width: 100%; }
 .block-subject-bar { height: 6px; border-radius: 3px; width: 100%; transition: width 0.3s; }
+.block-details { display: flex; flex-direction: column; gap: 4px; width: 100%; }
 
 /* Icons in blocks */
 .block-actions {

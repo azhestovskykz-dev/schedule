@@ -97,6 +97,8 @@ function showApp() {
     document.getElementById('loginOverlay').classList.remove('active');
     document.getElementById('app').style.display = 'flex';
     
+    // Инициализация темы
+    initTheme();
     // Применение ролей
     applyRoles();
     
@@ -129,6 +131,24 @@ function applyRoles() {
         
         // Применяем CSS класс view-mode на body
         document.body.classList.add('view-mode');
+    }
+}
+
+function initTheme() {
+    const savedTheme = localStorage.getItem('schedule_theme') || 'dark';
+    if (savedTheme === 'light') {
+        document.documentElement.classList.add('theme-light');
+    }
+    
+    const themeBtn = document.getElementById('themeToggleBtn');
+    if(themeBtn) {
+        themeBtn.textContent = savedTheme === 'light' ? '🌜' : '🌞';
+        themeBtn.addEventListener('click', () => {
+            document.documentElement.classList.toggle('theme-light');
+            const isLight = document.documentElement.classList.contains('theme-light');
+            localStorage.setItem('schedule_theme', isLight ? 'light' : 'dark');
+            themeBtn.textContent = isLight ? '🌜' : '🌞';
+        });
     }
 }
 
@@ -219,10 +239,18 @@ function renderSchedule() {
         const subjColor = subjObj ? subjObj.color : (SUBJECT_COLORS[normSubject] ? SUBJECT_COLORS[normSubject].bg : DEFAULT_COLOR.bg);
 
         const block = document.createElement('div');
-        block.className = 'schedule-block';
         block.style.setProperty('--subject-color', subjColor);
         block.draggable = state.editMode;
         block.dataset.id = item.id;
+        
+        let variantClass = 'variant-default';
+        const lowerName = normSubject.toLowerCase();
+        if (lowerName.includes('математика')) variantClass = 'variant-1';
+        else if (lowerName.includes('русск')) variantClass = 'variant-2';
+        else if (lowerName.includes('логопед') || lowerName.includes('агапе')) variantClass = 'variant-3';
+        else if (lowerName.includes('английск')) variantClass = 'variant-4';
+        
+        block.className = `schedule-block ${variantClass}`;
         
         let actionsHtml = '';
         if (state.editMode) {
@@ -234,16 +262,52 @@ function renderSchedule() {
             `;
         }
 
+        let topHtml = '';
+        if (variantClass === 'variant-1') {
+            topHtml = `
+                <div class="block-subject-wrapper v1-top">
+                    <div class="block-subject">${normSubject}</div>
+                    <div class="block-subject-line" style="background-color: ${subjColor};"></div>
+                </div>
+            `;
+        } else if (variantClass === 'variant-2') {
+            topHtml = `
+                <div class="block-subject-wrapper v2-top" style="background-color: ${subjColor};">
+                    <div class="block-subject" style="color: #fff;">${normSubject}</div>
+                </div>
+            `;
+        } else if (variantClass === 'variant-3') {
+            topHtml = `
+                <div class="block-subject-wrapper v3-top">
+                    <div class="block-subject" style="color: ${subjColor}; font-weight: 700;">${normSubject}</div>
+                    <div class="block-subject-line" style="background-color: ${subjColor};"></div>
+                </div>
+            `;
+        } else if (variantClass === 'variant-4') {
+            topHtml = `
+                <div class="block-subject-wrapper v4-top">
+                    <div class="block-subject-bar" style="background-color: ${subjColor};"></div>
+                    <div class="block-subject">${normSubject}</div>
+                </div>
+            `;
+        } else {
+            topHtml = `
+                <div class="block-subject-wrapper">
+                    <div class="block-subject-bar" style="background-color: ${subjColor};"></div>
+                    <div class="block-subject">${normSubject}</div>
+                </div>
+            `;
+        }
+
         block.innerHTML = `
             ${actionsHtml}
-            <div class="block-subject-wrapper">
-                <div class="block-subject-bar" style="background-color: ${subjColor};"></div>
-                <div class="block-subject">${normSubject}</div>
-            </div>
-            <div class="block-teacher">${tNameText}</div>
-            <div class="block-meta">
-                <span class="block-duration">${item.duration} мин</span>
-                ${tPlatform}
+            ${topHtml}
+            <div class="block-details">
+                <div class="block-teacher">${tNameText}</div>
+                <div class="block-meta">
+                    <span class="block-duration">${item.duration} мин</span>
+                    ${tPlatform}
+                </div>
             </div>
         `;
 
