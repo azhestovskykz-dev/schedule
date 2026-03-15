@@ -54,6 +54,15 @@
 .t-settings-active        { background: #334155 !important; color: #fff !important; }
 .t-settings-inactive      { color: #64748b !important; border: 1px solid #e2e8f0 !important; background: white; }
 
+.t-site1-active       { background: #f97316 !important; color: #fff !important; box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3); }
+.t-site1-inactive     { color: #f97316 !important; border: 1px solid #e2e8f0 !important; background: white; }
+
+.t-site2-active       { background: #eab308 !important; color: #fff !important; box-shadow: 0 4px 12px rgba(234, 179, 8, 0.3); }
+.t-site2-inactive     { color: #eab308 !important; border: 1px solid #e2e8f0 !important; background: white; }
+
+.t-site4-active       { background: #ec4899 !important; color: #fff !important; box-shadow: 0 4px 12px rgba(236, 72, 153, 0.3); }
+.t-site4-inactive     { color: #ec4899 !important; border: 1px solid #e2e8f0 !important; background: white; }
+
 /* Sub-nav Active Styles */
 .sub-tab-active {
     background-color: white !important;
