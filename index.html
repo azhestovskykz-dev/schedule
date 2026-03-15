@@ -12,12 +12,12 @@
 </head>
 <body class="bg-[#f8fafc] text-[#1e293b] min-h-screen relative font-sans antialiased overflow-x-hidden">
 
-<div id="app" class="max-w-md mx-auto min-h-screen relative pb-20 ios-bottom">
+<div id="app" class="w-full min-h-screen relative pb-20 ios-bottom">
     
     <!-- TOP NAVIGATION -->
     <div class="sticky top-0 bg-[#f8fafc]/95 backdrop-blur-md z-50 border-b border-slate-200">
-        <nav class="flex overflow-x-auto whitespace-nowrap scrollbar-hide">
-            <div class="flex gap-2 p-3 min-w-max">
+        <nav class="flex overflow-x-auto whitespace-nowrap scrollbar-hide max-w-7xl mx-auto px-2">
+            <div class="flex gap-2 p-3 min-w-max mx-auto md:mx-0">
                 <button onclick="setMainTab('today')" id="main-tab-today" class="nav-btn t-today-active font-bold">Сегодня</button>
                 <button onclick="setMainTab('week')" id="main-tab-week" class="nav-btn t-week-inactive font-bold">Неделя</button>
                 <button onclick="setMainTab('analytics')" id="main-tab-analytics" class="nav-btn t-analytics-inactive font-bold">Аналитика</button>
@@ -32,7 +32,7 @@
         </nav>
         
         <!-- SUB-NAVIGATION FOR "TODAY" TAB -->
-        <div id="sub-nav-today" class="px-3 pb-3 hidden">
+        <div id="sub-nav-today" class="px-3 pb-3 hidden max-w-xl mx-auto w-full">
             <div class="bg-slate-100 p-1 rounded-2xl flex">
                 <button onclick="setSubTab('schedule')" id="sub-tab-schedule" class="flex-1 py-2 px-2 text-center text-sm font-bold rounded-xl transition-all shadow-sm bg-white text-emerald-600">Расписание</button>
                 <button onclick="setSubTab('plan')" id="sub-tab-plan" class="flex-1 py-2 px-2 text-center text-sm font-bold rounded-xl transition-all text-slate-500 hover:text-slate-800">План / Оплата</button>

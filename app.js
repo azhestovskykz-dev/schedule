@@ -157,7 +157,7 @@ function updateNavUI() {
 // ===================== VIEWS =====================
 
 function renderTodayTabs() {
-    let html = `<div class="pb-10 space-y-4 pt-1">`;
+    let html = `<div class="pb-10 space-y-4 pt-1 max-w-lg mx-auto">`;
     const today = getTodayName();
 
     if (state.subTab === 'schedule') {
@@ -234,9 +234,9 @@ function renderTodayTabs() {
 
 function renderWeekKanban() {
     let html = `
-    <div class="kanban-container">
+    <div class="kanban-container px-3 max-w-[1600px] mx-auto">
         ${DAYS.map(day => {
-            let colHtml = `<div class="kanban-column bg-white rounded-[2rem] p-4 shadow-sm border border-slate-100 h-[80vh] overflow-y-auto">
+            let colHtml = `<div class="kanban-column flex flex-col bg-white rounded-[2rem] p-4 shadow-sm border border-slate-200 h-[calc(100vh-140px)] overflow-y-auto">
                               <div class="sticky top-0 bg-white/95 backdrop-blur-sm z-10 pb-3 mb-2 border-b border-slate-100 flex items-center gap-2">
                                 <div class="w-2.5 h-2.5 rounded-full bg-blue-500"></div>
                                 <span class="font-black text-lg text-slate-800">${day}</span>
@@ -278,7 +278,7 @@ function renderAnalytics() {
     }));
 
     let html = `
-    <div class="pb-20 space-y-4">
+    <div class="pb-20 space-y-4 max-w-lg mx-auto">
         <div class="bg-indigo-600 text-white p-6 rounded-[2rem] shadow-lg bg-gradient-to-br from-indigo-500 to-purple-600">
             <div class="text-indigo-100 font-bold mb-1 uppercase text-sm">Всего занятий</div>
             <div class="text-4xl font-black mb-4">${totalLessons} <span class="text-lg font-medium opacity-70">шт.</span></div>
