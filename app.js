@@ -10,12 +10,13 @@ function render() {
         case 'finance': area.innerHTML = renderFinance(); break;
         case 'subjects': area.innerHTML = renderSubjects(); break;
         case 'teachers': area.innerHTML = renderTeachers(); break;
+        case 'schools': area.innerHTML = renderSchools(); break;
         default: area.innerHTML = '<div class="p-8 text-center">404</div>';
     }
 }
 
 function updateNavStyles() {
-    const sections = ['schedule','tasks','analytics','finance','subjects','teachers'];
+    const sections = ['schedule','tasks','analytics','finance','subjects','teachers','schools'];
     sections.forEach(s => {
         const btn = document.getElementById(`nav-${s}`);
         if(btn) {

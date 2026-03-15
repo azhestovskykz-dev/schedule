@@ -1,4 +1,4 @@
-﻿// ===================== SCHEDULE MODULE =====================
+// ===================== SCHEDULE MODULE =====================
 
 function renderSchedule() {
     let ht = `
@@ -20,19 +20,13 @@ function renderSchedule() {
 }
 
 function renderViewOptions() {
-    let count = state.scheduleTab === 'today' ? 3 : state.scheduleTab === 'week' ? 8 : state.scheduleTab === 'week2' ? 5 : 3;
-    
-    const weekLabels = [
-        "1: Канбан скролл", "2: Сетка абсолют", "3: Сетка скругления", 
-        "4: Горизонт. Timeline", "5: Компакт. Таблица", "6: Тепловая Карта", 
-        "7: Agenda Список", "8: Мозаика Карточек"
-    ];
+    let count = state.scheduleTab === 'today' ? 8 : state.scheduleTab === 'week' ? 18 : state.scheduleTab === 'week2' ? 5 : 3;
     
     let ht = '';
     for(let i=1; i<=count; i++) {
         let active = state.scheduleView === i;
-        let label = state.scheduleTab === 'week' ? weekLabels[i-1] : `Вариант ${i}`;
-        ht += `<button onclick="state.scheduleView=${i}; render();" class="px-3.5 py-1.5 rounded-xl text-[13px] font-bold transition-all whitespace-nowrap ${active ? 'bg-blue-500 text-white shadow-sm' : 'bg-white text-slate-500 border border-slate-200'}">${label}</button>`;
+        let label = state.scheduleTab === 'week' ? String(i) : `Вид ${i}`;
+        ht += `<button onclick="state.scheduleView=${i}; render();" class="px-3 py-1.5 rounded-xl text-[14px] font-black transition-all ${active ? 'bg-indigo-600 text-white shadow-sm' : 'bg-white text-slate-500 border border-slate-200'}">${label}</button>`;
     }
     return ht;
 }
@@ -69,15 +63,88 @@ function renderTodayView() {
         ht += `<div class="p-8 text-center text-slate-400 bg-white rounded-2xl border border-slate-200">На сегодня занятий нет.</div>`;
     } else {
         if (state.scheduleView === 1) {
-            // View 1: Standard Cards
             dayItems.forEach(it => ht += buildKanbanCard(it, it.time, day));
         } else if (state.scheduleView === 2) {
-            // View 2: Compact List
             dayItems.forEach(it => ht += buildListRow(it, day));
         } else if (state.scheduleView === 3) {
-            // View 3: Vertical Timeline
             ht += `<div class="relative pl-6 border-l-2 border-slate-200 space-y-6">`;
             dayItems.forEach(it => ht += buildTimelineNode(it, day));
+            ht += `</div>`;
+        } else if (state.scheduleView === 4) {
+            // View 4: Compact Color Blocks
+            ht += `<div class="flex flex-wrap gap-3">`;
+            dayItems.forEach(it => {
+                const s = state.subjects.find(x=>x.id===it.subjectId);
+                ht += `<div class="flex-1 min-w-[140px] p-3 rounded-2xl text-white shadow-sm flex flex-col justify-between transition-transform hover:-translate-y-1" style="background:${s?.color||'#ccc'}">
+                    <div class="font-black text-xl mb-2">${it.time}</div>
+                    <div class="font-bold text-sm leading-tight">${s?.name}</div>
+                    <div class="text-[10px] uppercase font-black opacity-75 mt-2">${it.duration} мин</div>
+                </div>`;
+            });
+            ht += `</div>`;
+        } else if (state.scheduleView === 5) {
+            // View 5: Minimalist Table
+            ht += `<div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <table class="w-full text-left text-sm">
+                    <tbody class="divide-y divide-slate-100">`;
+            dayItems.forEach(it => {
+                const s = state.subjects.find(x=>x.id===it.subjectId);
+                ht += `<tr class="hover:bg-slate-50 transition-colors">
+                    <td class="p-3 w-20 font-mono font-bold text-slate-400 border-r border-slate-100">${it.time}</td>
+                    <td class="p-3 font-bold text-slate-700">
+                        <span class="inline-block w-2 h-2 rounded-full mr-2" style="background:${s?.color}"></span>${s?.name}
+                    </td>
+                    <td class="p-3 w-16 text-right text-xs font-bold text-slate-400">${it.duration}м</td>
+                </tr>`;
+            });
+            ht += `</tbody></table></div>`;
+        } else if (state.scheduleView === 6) {
+            // View 6: Hierarchical List
+            let subjectsMap = {};
+            dayItems.forEach(it => {
+                if(!subjectsMap[it.subjectId]) subjectsMap[it.subjectId] = [];
+                subjectsMap[it.subjectId].push(it);
+            });
+            Object.keys(subjectsMap).forEach(subjId => {
+                const s = state.subjects.find(x=>x.id===subjId);
+                ht += `<div class="mb-4">
+                    <h4 class="font-black text-slate-700 uppercase tracking-wide text-xs mb-2 flex items-center gap-2">
+                        <div class="w-2 h-2 rounded-full" style="background:${s?.color||'#ccc'}"></div>${s?.name||'Неизвестно'}
+                    </h4>
+                    <div class="space-y-2 pl-4 border-l-2 border-slate-100">`;
+                subjectsMap[subjId].forEach(it => {
+                    const t = state.teachers.find(x=>x.id===it.teacherId);
+                    ht += `<div class="bg-white p-2 rounded-xl border border-slate-200 shadow-sm flex justify-between items-center">
+                        <span class="font-mono font-bold text-slate-600">${it.time}</span>
+                        <span class="text-xs text-slate-500 font-semibold">${t?.name||'без преподавателя'}</span>
+                    </div>`;
+                });
+                ht += `</div></div>`;
+            });
+        } else if (state.scheduleView === 7) {
+            // View 7: Mini Cards Grid
+            ht += `<div class="grid grid-cols-2 md:grid-cols-3 gap-3">`;
+            dayItems.forEach(it => {
+                const s = state.subjects.find(x=>x.id===it.subjectId);
+                ht += `<div class="bg-white rounded-2xl border-2 p-3 shadow-sm flex flex-col justify-center items-center text-center cursor-pointer hover:bg-slate-50" style="border-color:${s?.color||'#eee'}">
+                    <div class="font-black text-2xl text-slate-800 mb-1">${it.time}</div>
+                    <div class="text-xs font-bold text-slate-500 uppercase">${s?.name.slice(0,10)}</div>
+                </div>`;
+            });
+            ht += `</div>`;
+        } else if (state.scheduleView === 8) {
+            // View 8: Agenda Large Typography
+            ht += `<div class="space-y-6">`;
+            dayItems.forEach(it => {
+                const s = state.subjects.find(x=>x.id===it.subjectId);
+                ht += `<div class="flex items-baseline gap-4">
+                    <div class="font-black text-3xl md:text-5xl text-slate-300 w-24 md:w-32 text-right">${it.time}</div>
+                    <div class="flex-1">
+                        <div class="font-black text-xl md:text-2xl text-slate-800" style="color:${s?.color||'#333'}">${s?.name}</div>
+                        <div class="text-sm font-bold text-slate-400 mt-1 uppercase tracking-widest">${it.duration} минут</div>
+                    </div>
+                </div>`;
+            });
             ht += `</div>`;
         }
     }
@@ -95,6 +162,16 @@ function renderWeekView() {
     if (state.scheduleView === 6) return viewWeek6_Heatmap();
     if (state.scheduleView === 7) return viewWeek7_AgendaList();
     if (state.scheduleView === 8) return viewWeek8_CardsMosaic();
+    if (state.scheduleView === 9) return viewWeek9_MicroTable();
+    if (state.scheduleView === 10) return viewWeek10_CompactKanban();
+    if (state.scheduleView === 11) return viewWeek11_Dashboard();
+    if (state.scheduleView === 12) return viewWeek12_Grid2x3();
+    if (state.scheduleView === 13) return viewWeek13_TimeBlocks();
+    if (state.scheduleView === 14) return viewWeek14_Strips();
+    if (state.scheduleView === 15) return viewWeek15_Dots();
+    if (state.scheduleView === 16) return viewWeek16_MinimalList();
+    if (state.scheduleView === 17) return viewWeek17_DenseTimeline();
+    if (state.scheduleView === 18) return viewWeek18_NanoHeatmap();
     return '';
 }
 
@@ -264,35 +341,242 @@ function viewWeek7_AgendaList() {
     return ht;
 }
 
-// --- V8: Cards Mosaic ---
-function viewWeek8_CardsMosaic() {
-    let ht = `<div class="columns-1 md:columns-2 lg:columns-3 gap-4 space-y-4">`;
-    
-    DAYS.forEach(day => {
-        let items = [];
-        TIMES.forEach(t => { (state.schedule[day][t] || []).forEach(it => items.push({time: t, ...it})); });
-        
-        items.forEach(it => {
-            const subj = state.subjects.find(s=>s.id===it.subjectId);
-            const teacher = state.teachers.find(t=>t.id===it.teacherId);
-            
-            // Randomly vary heights based on duration to simulate masonry
-            const hClass = it.duration > 60 ? 'min-h-[140px]' : 'min-h-[100px]';
-            
-            ht += `<div class="break-inside-avoid relative overflow-hidden rounded-3xl p-5 shadow-sm border border-slate-100 ${hClass} flex flex-col" style="background-color: ${hexToRgba(subj?.color, 0.05)}">
-                <div class="absolute top-0 right-0 w-16 h-16 rounded-bl-full opacity-20" style="background-color: ${subj?.color}"></div>
-                <div class="flex items-center gap-2 mb-auto">
-                    <span class="font-black text-2xl" style="color: ${subj?.color}">${it.time}</span>
-                    <span class="text-xs font-bold px-2 py-1 rounded-full text-slate-500 bg-white shadow-sm">${day}</span>
-                </div>
-                <div class="mt-4">
-                    <div class="font-black text-lg text-slate-800 leading-tight">${subj?.name}</div>
-                    <div class="text-sm font-semibold text-slate-500 mt-1">${teacher?.name} (${it.duration}м)</div>
-                </div>
-            </div>`;
+// --- V9: Micro Table ---
+function viewWeek9_MicroTable() {
+    let ht = `<div class="max-w-4xl mx-auto bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+        <table class="w-full text-center text-[10px] sm:text-xs">
+            <thead class="bg-slate-50 border-b border-slate-200">
+                <tr><th class="p-1 font-bold text-slate-400 w-10">⏳</th>
+                ${DAYS.filter(d=>d!=='Вне').map(d=>`<th class="p-1 font-black text-slate-600 border-l border-slate-100 uppercase tracking-tighter">${d.slice(0,2)}</th>`).join('')}
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">`;
+    TIMES.forEach(time => {
+        ht += `<tr class="hover:bg-slate-50"><td class="p-1 font-mono text-slate-400 border-r border-slate-100">${time}</td>`;
+        DAYS.filter(d=>d!=='Вне').forEach(day => {
+            const items = state.schedule[day][time] || [];
+            if(items.length===0) { ht += `<td class="border-l border-slate-50"></td>`; return; }
+            ht += `<td class="p-0 border-l border-slate-100 align-top">`;
+            items.forEach(it => {
+                const s = state.subjects.find(s=>s.id===it.subjectId);
+                ht += `<div class="m-px p-1 text-[9px] font-bold text-white leading-none rounded-sm truncate" style="background:${s?.color||'#ccc'}">${s?.name.slice(0,3)}</div>`;
+            });
+            ht += `</td>`;
         });
+        ht += `</tr>`;
+    });
+    ht += `</tbody></table></div>`;
+    return ht;
+}
+
+// --- V10: Compact Kanban ---
+function viewWeek10_CompactKanban() {
+    let ht = `<div class="max-w-5xl mx-auto flex gap-2 overflow-x-auto pb-2 scrollbar-hide">`;
+    DAYS.filter(d=>d!=='Вне').forEach(day => {
+        ht += `<div class="flex-1 min-w-[120px] bg-slate-50 rounded-xl p-2 border border-slate-200 flex flex-col h-[70vh] overflow-y-auto">
+            <div class="text-center font-black text-sm text-slate-700 uppercase mb-2 sticky top-0 bg-slate-50 z-10 pb-1 border-b border-slate-200">${day}</div>
+            <div class="space-y-1.5 flex-1">`;
+        let hasItems = false;
+        TIMES.forEach(time => {
+            (state.schedule[day][time] || []).forEach(it => {
+                hasItems = true;
+                const s = state.subjects.find(x=>x.id===it.subjectId);
+                ht += `<div class="bg-white p-1.5 rounded-lg border border-slate-100 shadow-sm border-l-2" style="border-left-color:${s?.color||'#ccc'}">
+                    <div class="text-[9px] font-black text-slate-400">${time}</div>
+                    <div class="text-[11px] font-bold text-slate-800 leading-tight truncate">${s?.name}</div>
+                </div>`;
+            });
+        });
+        if(!hasItems) ht += `<div class="text-[10px] text-center text-slate-400 mt-4">Пусто</div>`;
+        ht += `</div></div>`;
     });
     ht += `</div>`;
+    return ht;
+}
+
+// --- V11: Dashboard ---
+function viewWeek11_Dashboard() {
+    let ht = `<div class="max-w-6xl mx-auto grid grid-cols-2 lg:grid-cols-6 gap-3">`;
+    DAYS.filter(d=>d!=='Вне').forEach((day, i) => {
+        let itemsCount = 0; let totalMins = 0;
+        TIMES.forEach(t => (state.schedule[day][t] || []).forEach(it => { itemsCount++; totalMins += it.duration; }));
+        
+        let color = itemsCount > 0 ? 'bg-white' : 'bg-slate-50 opacity-50';
+        let border = itemsCount > 0 ? 'border-indigo-100' : 'border-slate-200';
+        ht += `<div class="${color} p-4 rounded-2xl border ${border} shadow-sm flex flex-col justify-between h-32 hover:scale-105 transition-transform">
+            <div class="flex justify-between items-start">
+                <span class="font-black text-lg text-slate-700 uppercase">${day}</span>
+                <span class="text-xs font-bold text-white bg-indigo-500 px-2 rounded-full">${itemsCount}</span>
+            </div>
+            <div>
+                <div class="text-xs text-slate-500 font-semibold mb-1">Занятость</div>
+                <div class="w-full bg-slate-100 rounded-full h-1.5"><div class="bg-indigo-500 h-1.5 rounded-full" style="width: ${Math.min(totalMins/480*100, 100)}%"></div></div>
+                <div class="text-[10px] font-bold text-slate-400 mt-1 text-right">${totalMins} мин</div>
+            </div>
+        </div>`;
+    });
+    ht += `</div>`;
+    return ht;
+}
+
+// --- V12: Grid 2x3 ---
+function viewWeek12_Grid2x3() {
+    let ht = `<div class="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">`;
+    DAYS.filter(d=>d!=='Вне').forEach(day => {
+        ht += `<div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 h-64 flex flex-col">
+            <h3 class="font-black text-slate-800 text-base uppercase border-b-2 border-slate-100 pb-2 mb-3">${day}</h3>
+            <div class="flex-1 overflow-y-auto pr-2 space-y-2">`;
+        let hasItems = false;
+        TIMES.forEach(time => {
+            (state.schedule[day][time] || []).forEach(it => {
+                hasItems = true;
+                const s = state.subjects.find(x=>x.id===it.subjectId);
+                ht += `<div class="flex items-center gap-2 text-xs">
+                    <div class="font-mono font-bold text-slate-400 w-10">${time}</div>
+                    <div class="w-1.5 h-1.5 rounded-full" style="background:${s?.color}"></div>
+                    <div class="font-bold text-slate-700 truncate">${s?.name}</div>
+                </div>`;
+            });
+        });
+        if(!hasItems) ht += `<div class="text-slate-400 text-xs text-center mt-6">Свободный день</div>`;
+        ht += `</div></div>`;
+    });
+    ht += `</div>`;
+    return ht;
+}
+
+// --- V13: Time Blocks ---
+function viewWeek13_TimeBlocks() {
+    let ht = `<div class="max-w-4xl mx-auto space-y-2">`;
+    DAYS.filter(d=>d!=='Вне').forEach(day => {
+        ht += `<div class="flex bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm h-12">
+            <div class="w-16 bg-slate-50 font-black text-slate-700 flex items-center justify-center border-r border-slate-200 uppercase text-xs">${day}</div>
+            <div class="flex-1 flex p-1 gap-1">`;
+        TIMES.forEach(time => {
+            (state.schedule[day][time] || []).forEach(it => {
+                const s = state.subjects.find(x=>x.id===it.subjectId);
+                ht += `<div class="h-full rounded-md flex-1 min-w-[20px] max-w-[150px] flex items-center justify-center text-[10px] font-bold text-white truncate px-1 transition-transform hover:scale-[1.02]" style="background:${s?.color||'#ccc'}">${s?.name.slice(0,3)}</div>`;
+            });
+        });
+        ht += `</div></div>`;
+    });
+    ht += `</div>`;
+    return ht;
+}
+
+// --- V14: Strips ---
+function viewWeek14_Strips() {
+    let ht = `<div class="max-w-5xl mx-auto space-y-1">`;
+    DAYS.filter(d=>d!=='Вне').forEach(day => {
+        let items = [];
+        TIMES.forEach(t => (state.schedule[day][t] || []).forEach(it => items.push({time:t,...it})));
+        if (items.length === 0) return;
+        
+        ht += `<div class="flex items-center text-xs bg-white rounded-lg border border-slate-100 p-1.5 shadow-sm hover:bg-slate-50">
+            <div class="font-black text-slate-400 w-8 uppercase">${day.slice(0,2)}</div>
+            <div class="flex-1 flex flex-wrap gap-2">`;
+        items.forEach(it => {
+            const s = state.subjects.find(x=>x.id===it.subjectId);
+            ht += `<span class="flex items-center gap-1 font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-full"><span class="w-2 h-2 rounded-full" style="background:${s?.color}"></span>${it.time} ${s?.name}</span>`;
+        });
+        ht += `</div></div>`;
+    });
+    ht += `</div>`;
+    return ht;
+}
+
+// --- V15: Dots ---
+function viewWeek15_Dots() {
+    let ht = `<div class="max-w-3xl mx-auto bg-white p-6 justify-center flex gap-6 rounded-3xl border border-slate-200 shadow-sm overflow-x-auto">`;
+    DAYS.filter(d=>d!=='Вне').forEach(day => {
+        ht += `<div class="flex flex-col items-center gap-3">
+            <div class="font-black text-slate-800 uppercase text-xs pb-2 border-b-2 border-slate-100 w-full text-center">${day}</div>
+            <div class="flex flex-col gap-1.5">`;
+        let hasItems=false;
+        TIMES.forEach(time => {
+            (state.schedule[day][time] || []).forEach(it => {
+                hasItems=true;
+                const s = state.subjects.find(x=>x.id===it.subjectId);
+                ht += `<div class="w-6 h-6 rounded-full shadow-inner flex items-center justify-center text-white text-[9px] font-bold hover:scale-125 transition-transform cursor-pointer" style="background:${s?.color}" title="${time} ${s?.name}">${s?.name.charAt(0)}</div>`;
+            });
+        });
+        if(!hasItems) ht += `<div class="w-6 h-6 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-300 text-[10px]">-</div>`;
+        ht += `</div></div>`;
+    });
+    ht += `</div>`;
+    return ht;
+}
+
+// --- V16: Minimal List ---
+function viewWeek16_MinimalList() {
+    let ht = `<div class="max-w-2xl mx-auto space-y-4">`;
+    DAYS.filter(d=>d!=='Вне').forEach(day => {
+        let items = [];
+        TIMES.forEach(t => (state.schedule[day][t] || []).forEach(it => items.push({time:t,...it})));
+        if(items.length===0) return;
+        ht += `<div class="flex gap-4 items-start">
+            <div class="font-black text-slate-300 text-xl tracking-tighter uppercase w-10 text-right uppercase">${day.slice(0,3)}</div>
+            <div class="flex-1 space-y-1 border-l-2 border-slate-100 pl-4 py-1">`;
+        items.forEach(it => {
+            const s = state.subjects.find(x=>x.id===it.subjectId);
+            ht += `<div class="text-sm">
+                <span class="font-mono text-slate-400 font-bold mr-2">${it.time}</span>
+                <span class="font-bold text-slate-700" style="color:${s?.color}">${s?.name}</span>
+            </div>`;
+        });
+        ht += `</div></div>`;
+    });
+    ht += `</div>`;
+    return ht;
+}
+
+// --- V17: Dense Timeline ---
+function viewWeek17_DenseTimeline() {
+    let ht = `<div class="max-w-5xl mx-auto bg-slate-800 rounded-3xl p-6 text-white shadow-xl overflow-x-auto">
+        <div class="flex ml-12 mb-2 text-[10px] font-bold text-slate-500 border-b border-slate-700 pb-2">
+            ${TIMES.map(t=>`<div class="flex-1 text-center">${t}</div>`).join('')}
+        </div>`;
+    DAYS.filter(d=>d!=='Вне').forEach(day => {
+        ht += `<div class="flex items-center h-8 mb-1 hover:bg-slate-700 rounded-lg">
+            <div class="w-12 text-xs font-black text-slate-400 uppercase tracking-widest">${day.slice(0,2)}</div>
+            <div class="flex-1 flex relative h-full">`;
+        const hourWidth = 100/TIMES.length;
+        TIMES.forEach(t => {
+            (state.schedule[day][t] || []).forEach(it => {
+                let hIdx = TIMES.indexOf(t); if(hIdx===-1)return;
+                const s = state.subjects.find(x=>x.id===it.subjectId);
+                ht += `<div class="absolute h-6 top-1 rounded text-[9px] font-bold px-1 overflow-hidden transition-all hover:z-10 hover:h-8 hover:top-0 shadow-lg" 
+                     style="left:${hIdx*hourWidth}%; width:${(it.duration/60)*hourWidth}%; background-color:${s?.color};">${s?.name}</div>`;
+            });
+        });
+        ht += `</div></div>`;
+    });
+    ht += `</div>`;
+    return ht;
+}
+
+// --- V18: Nano Heatmap ---
+function viewWeek18_NanoHeatmap() {
+    let ht = `<div class="max-w-md mx-auto bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
+        <div class="grid grid-cols-7 border-b border-slate-100 pb-2 mb-2">
+            ${DAYS.filter(d=>d!=='Вне').map(d=>`<div class="text-center font-bold text-[10px] text-slate-400 uppercase">${d.slice(0,2)}</div>`).join('')}
+        </div>
+        <div class="grid grid-cols-7 gap-1">`;
+    TIMES.forEach(time => {
+        DAYS.filter(d=>d!=='Вне').forEach(day => {
+            const items = state.schedule[day][time] || [];
+            let color = 'bg-slate-50';
+            if(items.length > 0) {
+                const s = state.subjects.find(x=>x.id===items[0].subjectId);
+                color = s ? `bg-[${s.color}]` : 'bg-indigo-500'; // fallback
+                // Quick hack for custom hex values in TW: use inline style
+                ht += `<div class="aspect-square rounded shadow-sm opacity-80 hover:opacity-100 transition-opacity cursor-pointer" style="background-color:${s?.color||'#6366f1'}" title="${time} ${day}: ${items.length} занятий"></div>`;
+            } else {
+                ht += `<div class="aspect-square rounded ${color} border border-slate-100"></div>`;
+            }
+        });
+    });
+    ht += `</div></div>`;
     return ht;
 }
 

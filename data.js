@@ -8,10 +8,12 @@ const state = {
     analyticsView: 1,      // 1-5 analytics variant
     teachersView: 1,       // 1-5 teachers variant
     subjectsView: 1,       // 1-5 subjects variant
+    schoolsView: 1,        // 1-5 schools variant
     subTab: 'schedule',    // for today: 'schedule','plan','fact'
     schedule: {},
     teachers: [],
     subjects: [],
+    schools: [],
     tasks: [],
     finances: [],
     activeWeekDay: 'Пн',
