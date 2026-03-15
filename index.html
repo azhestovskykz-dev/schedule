@@ -23,6 +23,10 @@
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
+<!-- Cache control -->
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 </head>
 <body class="bg-[#f8fafc] text-[#1e293b] min-h-screen relative font-sans antialiased overflow-x-hidden">
 
@@ -48,16 +52,13 @@
 
 </div>
 
-<!-- MODULAR SCRIPTS -->
-<script src="data.js"></script>
-<script src="schedule.js"></script>
-<script src="tasks.js"></script>
-<script src="analytics.js"></script>
-<script src="finance.js"></script>
-<script src="subjects.js"></script>
-<script src="teachers.js"></script>
-<script src="schools.js"></script>
-<script src="app.js"></script>
+<!-- MODULAR SCRIPTS (cache-busted) -->
+<script>
+var v = Date.now();
+['data.js','schedule.js','tasks.js','analytics.js','finance.js','subjects.js','teachers.js','schools.js','app.js'].forEach(function(f){
+    document.write('<script src="'+f+'?v='+v+'"><\/script>');
+});
+</script>
 
 </body>
 </html>
