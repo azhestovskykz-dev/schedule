@@ -121,6 +121,8 @@ function render() {
         area.innerHTML = renderTodayTabs();
     } else if (state.tab === 'week') {
         area.innerHTML = renderWeekKanban();
+    } else if (state.tab === 'week2') {
+        area.innerHTML = renderWeek2Kanban();
     } else if (state.tab === 'analytics') {
         area.innerHTML = renderAnalytics();
     } else if (state.tab === 'settings') {
@@ -130,7 +132,7 @@ function render() {
 
 function updateNavUI() {
     // Update Top Nav
-    ['today', 'week', 'analytics', 'settings'].forEach(t => {
+    ['today', 'week', 'week2', 'analytics', 'settings'].forEach(t => {
         const btn = document.getElementById(`main-tab-${t}`);
         if(btn) {
             btn.className = `nav-btn t-${t}-${state.tab === t ? 'active' : 'inactive'} font-bold`;
@@ -255,6 +257,61 @@ function renderWeekKanban() {
             if(count === 0) colHtml += `<div class="text-sm text-center text-slate-400 mt-4">Пусто</div>`;
             
             colHtml += `</div></div>`;
+            return colHtml;
+        }).join('')}
+    </div>`;
+    
+    return html;
+}
+
+function renderWeek2Kanban() {
+    const DAY_COLORS = ['#d946ef', '#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#64748b'];
+
+    let html = `
+    <div class="kanban-container w-full px-2 lg:px-6 mx-auto">
+        ${DAYS.map((day, idx) => {
+            const hColor = DAY_COLORS[idx % DAY_COLORS.length];
+            
+            let count = 0;
+            let rowsHtml = '';
+            TIMES.forEach(time => {
+                const items = state.schedule[day][time] || [];
+                items.forEach(it => {
+                    count++;
+                    const sInfo = state.subjects.find(s => s.id === it.subjectId);
+                    const tInfo = state.teachers.find(t => t.id === it.teacherId);
+                    const color = sInfo ? sInfo.color : '#000';
+                    const params = `openActionModal('${day}','${time}','${it.id}')`;
+                    
+                    rowsHtml += `
+                    <div class="border-b border-slate-200 p-3 text-[14px] hover:bg-slate-50 cursor-pointer flex justify-between items-center" onclick="${params}">
+                        <div class="flex flex-col gap-1">
+                            <span class="font-bold whitespace-normal leading-tight" style="color: ${color}">
+                                ${sInfo ? sInfo.name : 'Unknown'}
+                            </span>
+                            <span class="text-slate-800 leading-tight">${tInfo ? tInfo.name : 'Unknown'}</span>
+                        </div>
+                        <div class="flex flex-col items-end gap-1 shrink-0 ml-2">
+                           <span class="text-xs bg-slate-100 text-slate-600 px-1.5 py-0.5 font-mono">${time}</span>
+                           ${it.comment ? `<span class="text-[10px] text-slate-400 italic max-w-[80px] truncate">${it.comment}</span>` : ''}
+                        </div>
+                    </div>
+                    `;
+                });
+            });
+
+            const colHtml = `
+            <div class="kanban-column flex flex-col h-[calc(100vh-140px)] overflow-y-auto bg-white border" style="border-color: ${hColor}">
+                <div class="sticky top-0 z-10">
+                    <div class="text-white p-2.5 font-medium flex justify-between items-center text-[15px]" style="background-color: ${hColor};">
+                        <span>${day}</span>
+                        <span>▼ ${count}</span>
+                    </div>
+                </div>
+                <div class="flex-1">
+                    ${count > 0 ? rowsHtml : `<div class="text-sm text-center text-slate-400 p-4">Пусто</div>`}
+                </div>
+            </div>`;
             return colHtml;
         }).join('')}
     </div>`;
