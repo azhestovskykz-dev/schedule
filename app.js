@@ -12,7 +12,8 @@ let state = {
     subjects: [],
     editingSubjectId: null,
     currentUser: null, // "admin" (Андрей) или "user" (Никита)
-    sleepData: {}
+    sleepData: {},
+    activeMobileDay: 'Пн' // Изначально выбран Понедельник для моб. версии
 };
 
 const DAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
@@ -108,6 +109,7 @@ function showApp() {
     migratePlatforms();
     loadSleepData();
     initGrid();
+    initMobileTabs();
     setupEventListeners();
     setupContextMenu();
     renderSchedule();
@@ -185,8 +187,48 @@ function initGrid() {
     DAYS.forEach(day => {
         const cell = createCell('summary-cell', '');
         cell.id = `summary-${day}`;
+        cell.dataset.day = day;
         grid.appendChild(cell);
     });
+}
+
+function initMobileTabs() {
+    const tabsContainer = document.getElementById('mobileDayTabs');
+    if (!tabsContainer) return;
+    tabsContainer.innerHTML = '';
+    
+    // Set actual active day based on today if not already set manually
+    if (!state.activeMobileDay) {
+        const todayIdx = new Date().getDay(); // 0 is Sunday
+        const mappedIdx = todayIdx === 0 ? 6 : todayIdx - 1; // Map to 0=Mon, 6=Sun
+        state.activeMobileDay = DAYS[mappedIdx] || 'Пн';
+    }
+
+    DAYS.forEach(day => {
+        const btn = document.createElement('button');
+        btn.className = `mobile-tab-btn ${state.activeMobileDay === day ? 'active' : ''}`;
+        btn.textContent = day;
+        btn.dataset.tabDay = day;
+        btn.onclick = () => {
+            state.activeMobileDay = day;
+            document.querySelectorAll('.mobile-tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            updateActiveMobileColumn();
+        };
+        tabsContainer.appendChild(btn);
+    });
+}
+
+function updateActiveMobileColumn() {
+    // Удаляем предыдущий активный класс
+    document.querySelectorAll('.active-mobile-day').forEach(el => el.classList.remove('active-mobile-day'));
+    
+    // Добавляем новый
+    if (state.activeMobileDay) {
+        document.querySelectorAll(`[data-day="${state.activeMobileDay}"]`).forEach(el => {
+            el.classList.add('active-mobile-day');
+        });
+    }
 }
 
 function createCell(className, content) {
@@ -323,6 +365,7 @@ function renderSchedule() {
 
     renderDailySummary(dailyStats);
     updateAnalytics(analytics);
+    updateActiveMobileColumn();
 }
 
 function renderDailySummary(stats) {
