@@ -370,20 +370,27 @@ function setupContextMenu() {
         }
     });
 
+    function hideContextMenu() {
+        document.getElementById('contextMenu').classList.remove('active');
+    }
+
     // Обработчики кнопок меню
     document.getElementById('cmEdit').addEventListener('click', (e) => {
         const id = state.contextMenuTargetId;
         if (id) window.editItem(id, e);
+        hideContextMenu();
     });
 
     document.getElementById('cmDelete').addEventListener('click', (e) => {
         const id = state.contextMenuTargetId;
         if (id) window.deleteItem(id, e);
+        hideContextMenu();
     });
 
     document.getElementById('cmComment').addEventListener('click', (e) => {
         const id = state.contextMenuTargetId;
         if (!id) return;
+        hideContextMenu();
         const item = state.schedule[id];
         const text = prompt('Введите комментарий к занятию:', item.comment || '');
         if (text !== null) {
@@ -396,7 +403,7 @@ function setupContextMenu() {
 
 function handleContextMenu(e, item, tInfo) {
     if (!state.editMode) return; // Меню доступно только в режиме редактирования/админа
-    e.preventDefault(); // Отменяем стандартное меню браузера
+    if (e && e.preventDefault) e.preventDefault(); // Отменяем стандартное меню браузера
 
     const menu = document.getElementById('contextMenu');
     state.contextMenuTargetId = item.id; // Запоминаем, для какого элемента открыли
@@ -579,10 +586,24 @@ function handleFormSubmit(e) {
 
     const teacherSelect = document.getElementById('teacherSelect');
     
+    // Check for duplicate lesson in the exact same day/time slot
+    const day = state.editingId ? state.schedule[state.editingId].day : state.currentDay;
+    const time = state.editingId ? state.schedule[state.editingId].time : state.currentTime;
+    
+    // If we're creating a new item, and something already exists at this spot, give a warning!
+    if (!state.editingId) {
+        const existingAtSlot = Object.values(state.schedule).find(x => x.day === day && x.time === time);
+        if (existingAtSlot) {
+            if (!confirm(`В ячейке ${day} ${time} уже есть занятие (${existingAtSlot.subject}). Наложить еще одно? Можно будет удалять по отдельности.`)) {
+                return; // Отмена сохранения
+            }
+        }
+    }
+
     const item = {
         id: state.editingId || Date.now().toString(),
-        day: state.editingId ? state.schedule[state.editingId].day : state.currentDay,
-        time: state.editingId ? state.schedule[state.editingId].time : state.currentTime,
+        day: day,
+        time: time,
         subject: document.getElementById('subjectInput').value,
         teacherId: teacherSelect.value,
         duration: document.getElementById('durationInput').value,
@@ -597,7 +618,7 @@ function handleFormSubmit(e) {
 }
 
 window.editItem = function(id, e) {
-    e.stopPropagation();
+    if (e && e.stopPropagation) e.stopPropagation();
     if (!state.editMode) return;
 
     const item = state.schedule[id];
@@ -623,7 +644,7 @@ window.editItem = function(id, e) {
 };
 
 window.deleteItem = function(id, e) {
-    e.stopPropagation();
+    if (e && e.stopPropagation) e.stopPropagation();
     if (!state.editMode) return;
     
     if (confirm('Удалить предмет?')) {
