@@ -243,9 +243,13 @@ function renderSchedule() {
 
         const block = document.createElement('div');
         block.style.setProperty('--subject-color', subjColor);
+        // Добавляем прозрачность цвета в переменную (RGBA approximation helper is not here, so we will use absolute fallback or just subjColor in CSS)
+        // Для CSS переменной добавим:
+        block.style.setProperty('--subject-color-alpha', subjColor + '33');
+        
         block.draggable = state.editMode;
         block.dataset.id = item.id;
-        block.className = `schedule-block variant-2`; // Применяем всем единый стиль (Вариант 2)
+        block.className = `schedule-block`; // Применяем базовый класс карточки Канбан
         
         let actionsHtml = '';
         if (state.editMode) {
@@ -257,14 +261,21 @@ function renderSchedule() {
             `;
         }
 
+        // Tag row
         let topHtml = `
-            <div class="block-subject-wrapper v2-top" style="background-color: ${subjColor};">
-                <div class="block-subject" style="color: #fff;">${normSubject}</div>
+            <div class="block-tag-list">
+                <span class="block-tag">${normSubject}</span>
             </div>
         `;
+
+        // Title (Teacher)
+        let titleHtml = `
+            <div class="block-title">${tNameText}</div>
+        `;
+
         // Добавляем телефон, если есть
         const tPhone = tInfo && tInfo.phone ? tInfo.phone : '';
-        const tPhoneHtml = tPhone ? `<div class="block-phone"><a href="tel:${tPhone}">📞 ${tPhone}</a></div>` : '';
+        const tPhoneHtml = tPhone ? `<div class="block-info-row block-phone"><i>📞</i> <a href="tel:${tPhone}">${tPhone}</a></div>` : '';
 
         // Иконка платформы — кликабельная, если есть
         let platformBadgeHtml = '';
@@ -282,18 +293,21 @@ function renderSchedule() {
             ? `<div class="block-comment" title="${item.comment}">💬 ${item.comment}</div>` 
             : '';
 
+        // Footer 
+        let footerHtml = `
+            <div class="block-footer">
+                <span class="block-duration-badge"><i>⏱</i> ${item.duration} мин</span>
+                ${platformBadgeHtml}
+            </div>
+        `;
+
         block.innerHTML = `
             ${actionsHtml}
             ${topHtml}
-            <div class="block-details">
-                <div class="block-teacher">${tNameText}</div>
-                ${tPhoneHtml}
-                ${commentHtml}
-                <div class="block-footer-line">
-                    <span class="block-duration">${item.duration} мин</span>
-                    ${platformBadgeHtml}
-                </div>
-            </div>
+            ${titleHtml}
+            ${tPhoneHtml}
+            ${commentHtml}
+            ${footerHtml}
         `;
 
         if (state.editMode) {
