@@ -72,31 +72,28 @@ input:focus, select:focus, textarea:focus {
 
 /* Kanban Horizontal Scroll in Week View */
 .kanban-container {
-    display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: 100%;
-    gap: 16px;
+    display: flex;
     overflow-x: auto;
     scroll-snap-type: x mandatory;
     scroll-padding: 0;
     padding-bottom: 20px;
+    gap: 12px;
 }
 .kanban-column {
+    flex: 0 0 100%;
     scroll-snap-align: center;
+    /* ensure minimum width so cards dont collapse completely on super narrow screens if we had many columns */
 }
 
-@media (min-width: 640px) {
+@media (min-width: 768px) {
+    /* На компьютерах и планшетах (>= 768px): показываем все 7 колонок разом без скролла */
     .kanban-container {
-        grid-auto-columns: calc((100% - 16px) / 2); /* 2 columns */
+        overflow-x: visible;
+        scroll-snap-type: none;
+        gap: 12px;
     }
-}
-@media (min-width: 1024px) {
-    .kanban-container {
-        grid-auto-columns: calc((100% - 3 * 16px) / 4); /* 4 columns */
-    }
-}
-@media (min-width: 1400px) {
-    .kanban-container {
-        grid-auto-columns: calc((100% - 6 * 16px) / 7); /* 7 columns */
+    .kanban-column {
+        flex: 1 1 0;
+        min-width: 0; /* allows flex children to shrink smaller than their content if needed */
     }
 }

@@ -234,9 +234,9 @@ function renderTodayTabs() {
 
 function renderWeekKanban() {
     let html = `
-    <div class="kanban-container px-3 max-w-[1600px] mx-auto">
+    <div class="kanban-container w-full px-2 lg:px-6 mx-auto">
         ${DAYS.map(day => {
-            let colHtml = `<div class="kanban-column flex flex-col bg-white rounded-[2rem] p-4 shadow-sm border border-slate-200 h-[calc(100vh-140px)] overflow-y-auto">
+            let colHtml = `<div class="kanban-column flex flex-col bg-white rounded-[1.5rem] lg:rounded-[2rem] p-3 lg:p-4 shadow-sm border border-slate-200 h-[calc(100vh-140px)] overflow-y-auto">
                               <div class="sticky top-0 bg-white/95 backdrop-blur-sm z-10 pb-3 mb-2 border-b border-slate-100 flex items-center gap-2">
                                 <div class="w-2.5 h-2.5 rounded-full bg-blue-500"></div>
                                 <span class="font-black text-lg text-slate-800">${day}</span>
