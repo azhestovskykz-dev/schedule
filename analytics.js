@@ -1,12 +1,11 @@
-﻿// ===================== ANALYTICS MODULE =====================
+// ===================== ANALYTICS MODULE =====================
 
 function renderAnalytics() {
     let ht = `
         <div class="mb-4 flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-            ${[1,2,3,4,5].map(i => {
+            ${[1,2,3,4,5,6,7,8].map(i => {
                 let active = state.analyticsView === i;
-                let labels = ['1: Круговая (Предметы)', '2: Бары (По дням)', '3: Преподаватели', '4: Финансовая', '5: Общая сводка'];
-                return `<button onclick="state.analyticsView=${i}; render();" class="px-5 py-2.5 rounded-2xl text-[14px] font-black shadow-sm transition-all whitespace-nowrap ${active ? 'bg-purple-500 text-white' : 'bg-white text-slate-500 border border-slate-200'}">${labels[i-1]}</button>`;
+                return `<button onclick="state.analyticsView=${i}; render();" class="px-5 py-2.5 rounded-2xl text-[14px] font-black shadow-sm transition-all whitespace-nowrap ${active ? 'bg-purple-500 text-white' : 'bg-white text-slate-500 border border-slate-200'}">${i}</button>`;
             }).join('')}
         </div>
         <div id="analytics-content">
@@ -22,6 +21,9 @@ function renderAnalyticsContent() {
     if (state.analyticsView === 3) return viewAnalytics3_Teachers();
     if (state.analyticsView === 4) return viewAnalytics4_Finance();
     if (state.analyticsView === 5) return viewAnalytics5_Summary();
+    if (state.analyticsView === 6) return viewAnalytics6_DayWorkloadGrid();
+    if (state.analyticsView === 7) return viewAnalytics7_ExpensesByCategory();
+    if (state.analyticsView === 8) return viewAnalytics8_TasksProgress();
     return '';
 }
 
@@ -237,4 +239,121 @@ function viewAnalytics5_Summary() {
             </div>
         </div>
     </div>`;
+}
+
+// --- V6: Day Workload Grid (Heatmap style) ---
+function viewAnalytics6_DayWorkloadGrid() {
+    let ht = `<div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm max-w-4xl mx-auto">
+        <div class="font-black text-lg text-slate-800 mb-6 border-b border-slate-100 pb-2">Матрица загруженности (минуты)</div>
+        <div class="overflow-x-auto"><table class="w-full text-center text-sm">
+            <thead>
+                <tr><th class="p-2 border-b border-r text-left text-slate-400 font-bold uppercase text-xs">Предмет</th>`;
+    
+    const activeDays = DAYS.filter(d=>d!=='Вне');
+    activeDays.forEach(d => ht += `<th class="p-2 border-b font-black text-slate-600">${d}</th>`);
+    ht += `</tr></thead><tbody class="divide-y divide-slate-100">`;
+    
+    let subjStats = {}; // {subjId: {day: mins}}
+    
+    activeDays.forEach(day => {
+        Object.values(state.schedule[day] || {}).forEach(arr => {
+            arr.forEach(it => {
+                if(!subjStats[it.subjectId]) subjStats[it.subjectId] = {};
+                if(!subjStats[it.subjectId][day]) subjStats[it.subjectId][day] = 0;
+                subjStats[it.subjectId][day] += it.duration;
+            });
+        });
+    });
+    
+    Object.keys(subjStats).forEach(sId => {
+        const subj = state.subjects.find(s=>s.id===sId);
+        if(!subj) return;
+        ht += `<tr><td class="p-2 border-r text-left truncate max-w-[150px] font-bold text-slate-700">
+                <span class="inline-block w-2 h-2 rounded-full mr-1" style="background:${subj.color}"></span>${subj.name}
+            </td>`;
+        activeDays.forEach(d => {
+            let mins = subjStats[sId][d] || 0;
+            let bg = mins === 0 ? 'bg-transparent text-slate-300' : 'bg-purple-50 text-purple-700 font-bold';
+            if(mins > 120) bg = 'bg-purple-200 text-purple-900 font-black';
+            ht += `<td class="p-2"><div class="mx-auto rounded-lg px-1 py-2 w-12 ${bg}">${mins>0 ? mins : '-'}</div></td>`;
+        });
+        ht += `</tr>`;
+    });
+    
+    ht += `</tbody></table></div></div>`;
+    return ht;
+}
+
+// --- V7: Expenses by Category ---
+function viewAnalytics7_ExpensesByCategory() {
+    let cats = {};
+    let total = 0;
+    state.finances.filter(f=>f.type==='expense').forEach(f => {
+        if(!cats[f.category]) cats[f.category] = 0;
+        cats[f.category] += f.amount;
+        total += f.amount;
+    });
+
+    let ht = `<div class="max-w-2xl mx-auto space-y-4">
+        <div class="flex justify-between items-end mb-2">
+            <h3 class="font-black text-xl text-slate-800">Структура расходов</h3>
+            <div class="font-black text-2xl text-rose-500">${fmtNum(total)}</div>
+        </div>`;
+        
+    const colors = ['bg-rose-500', 'bg-amber-500', 'bg-blue-500', 'bg-emerald-500', 'bg-purple-500'];
+    let cIdx = 0;
+    
+    Object.keys(cats).sort((a,b)=>cats[b]-cats[a]).forEach(cat => {
+        let percent = (cats[cat] / (total||1)) * 100;
+        ht += `<div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+            <div class="flex justify-between items-center mb-2">
+                <div class="font-bold text-slate-700">${cat}</div>
+                <div class="font-black text-slate-800">${fmtNum(cats[cat])} <span class="text-xs text-slate-400 ml-2">${percent.toFixed(1)}%</span></div>
+            </div>
+            <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                <div class="${colors[cIdx%colors.length]} h-2 rounded-full" style="width: ${percent}%"></div>
+            </div>
+        </div>`;
+        cIdx++;
+    });
+    
+    ht += `</div>`;
+    return ht;
+}
+
+// --- V8: Tasks Progress ---
+function viewAnalytics8_TasksProgress() {
+    let tot = state.tasks.length || 1;
+    let done = state.tasks.filter(t=>t.status==='done').length;
+    let inprog = state.tasks.filter(t=>t.status==='inprogress').length;
+    let todo = state.tasks.filter(t=>t.status==='todo').length;
+    
+    let ht = `<div class="max-w-3xl mx-auto bg-slate-800 text-white p-8 rounded-3xl shadow-xl border border-slate-700">
+        <div class="text-center mb-8">
+            <div class="font-black text-6xl text-emerald-400 mb-2">${Math.round((done/tot)*100)}%</div>
+            <div class="text-sm font-bold text-slate-400 uppercase tracking-widest">Общий прогресс задач</div>
+        </div>
+        
+        <div class="flex h-4 rounded-full overflow-hidden bg-slate-900 mb-8">
+            <div class="bg-emerald-500" style="width: ${(done/tot)*100}%"></div>
+            <div class="bg-blue-500" style="width: ${(inprog/tot)*100}%"></div>
+            <div class="bg-slate-600" style="width: ${(todo/tot)*100}%"></div>
+        </div>
+        
+        <div class="grid grid-cols-3 text-center gap-4">
+            <div>
+                <div class="font-black text-2xl text-emerald-400">${done}</div>
+                <div class="text-xs font-bold text-slate-400">ГОТОВО</div>
+            </div>
+            <div>
+                <div class="font-black text-2xl text-blue-400">${inprog}</div>
+                <div class="text-xs font-bold text-slate-400">В ПРОЦЕССЕ</div>
+            </div>
+            <div>
+                <div class="font-black text-2xl text-slate-300">${todo}</div>
+                <div class="text-xs font-bold text-slate-400">ОЖИДАЮТ</div>
+            </div>
+        </div>
+    </div>`;
+    return ht;
 }

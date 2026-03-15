@@ -3,13 +3,9 @@
 function renderTasks() {
     let ht = `
         <div class="mb-4 flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-            ${[1,2,3,4,5,6,7,8,9,10].map(i => {
+            ${[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20].map(i => {
                 let active = state.tasksView === i;
-                let labels = [
-                    '1: Стандарт Канбан', '2: По приоритету', '3: По дням недели', '4: Карточки-списки', '5: Хронология',
-                    '6: Плотная таблица', '7: Матрица Эйзенхауэра', '8: Календарь-Сетка', '9: Прогресс статусов', '10: Сквозной список'
-                ];
-                return `<button onclick="state.tasksView=${i}; render();" class="px-5 py-2.5 rounded-2xl text-[14px] font-black shadow-sm transition-all whitespace-nowrap ${active ? 'bg-amber-500 text-white' : 'bg-white text-slate-500 border border-slate-200'}">${labels[i-1]}</button>`;
+                return `<button onclick="state.tasksView=${i}; render();" class="px-5 py-2.5 rounded-2xl text-[14px] font-black shadow-sm transition-all whitespace-nowrap ${active ? 'bg-amber-500 text-white' : 'bg-white text-slate-500 border border-slate-200'}">${i}</button>`;
             }).join('')}
         </div>
         <div id="tasks-content">
@@ -30,6 +26,16 @@ function renderTasksContent() {
     if (state.tasksView === 8) return viewTasks8_CalendarMicro();
     if (state.tasksView === 9) return viewTasks9_StatKanban();
     if (state.tasksView === 10) return viewTasks10_DetailedList();
+    if (state.tasksView === 11) return viewTasks11_BoardCards();
+    if (state.tasksView === 12) return viewTasks12_Hexagons();
+    if (state.tasksView === 13) return viewTasks13_MinimalList();
+    if (state.tasksView === 14) return viewTasks14_CircleProgress();
+    if (state.tasksView === 15) return viewTasks15_Grid3D();
+    if (state.tasksView === 16) return viewTasks16_UniKanban();
+    if (state.tasksView === 17) return viewTasks17_UniVertBar();
+    if (state.tasksView === 18) return viewTasks18_UniSolidTags();
+    if (state.tasksView === 19) return viewTasks19_UniBorderBottom();
+    if (state.tasksView === 20) return viewTasks20_UniMinimalist();
     return '';
 }
 
@@ -253,25 +259,210 @@ function viewTasks9_StatKanban() {
     return ht;
 }
 
-// --- V10: Detailed List ---
-function viewTasks10_DetailedList() {
-    let ht = `<div class="max-w-5xl mx-auto space-y-3">`;
-    state.tasks.forEach(t => {
-        let sc = t.status==='done'?'bg-emerald-50 border-emerald-200':'bg-white border-slate-200';
-        let pc = t.priority==='high'?'text-rose-500':'text-slate-400';
-        ht += `<div class="${sc} border rounded-2xl p-4 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:border-indigo-300 transition-colors">
-            <div class="flex items-start gap-4 flex-1">
-                <div class="mt-1 w-6 h-6 rounded-full border-2 flex items-center justify-center ${t.status==='done'?'border-emerald-500 bg-emerald-500 text-white':'border-slate-300'}">
-                    ${t.status==='done'?'✓':''}
+// --- V11: Board Cards (Pinterest style) ---
+function viewTasks11_BoardCards() {
+    let ht = `<div class="max-w-6xl mx-auto columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-4 space-y-4">`;
+    state.tasks.forEach(task => {
+        let sc = task.status==='done'?'bg-emerald-50 border-emerald-200':'bg-white border-slate-200';
+        let ph = task.priority === 'high' ? 'text-rose-600 bg-rose-50' : task.priority === 'medium' ? 'text-amber-600 bg-amber-50' : 'text-blue-600 bg-blue-50';
+        let titleH = task.title.length > 30 ? 'text-xl' : 'text-2xl';
+        
+        ht += `<div class="break-inside-avoid ${sc} border rounded-3xl p-5 shadow-sm hover:shadow-md transition-all cursor-pointer group hover:-translate-y-1">
+            <div class="flex justify-between items-start mb-4">
+                <span class="text-[10px] font-black uppercase px-2 py-1 rounded-lg ${ph}">${task.priority}</span>
+                <span class="text-xs font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-lg">${task.day}</span>
+            </div>
+            <h3 class="font-black ${titleH} text-slate-800 leading-tight mb-4 ${task.status==='done'?'line-through opacity-50':''}">${task.title}</h3>
+            
+            <div class="flex justify-between items-center border-t border-slate-100 pt-3 mt-auto">
+                <div class="flex -space-x-2">
+                    <div class="w-6 h-6 rounded-full bg-slate-200 border-2 border-white"></div>
+                    <div class="w-6 h-6 rounded-full bg-slate-300 border-2 border-white"></div>
                 </div>
-                <div>
-                    <h3 class="font-bold text-lg text-slate-800 ${t.status==='done'?'line-through opacity-60':''}">${t.title}</h3>
-                    <div class="text-sm text-slate-500 mt-1">Детальное описание задачи (placeholder). Необходимо выполнить до конца дня.</div>
+                <div class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                 </div>
             </div>
-            <div class="flex sm:flex-col items-center sm:items-end gap-3 sm:gap-1 w-full sm:w-auto">
-                <div class="px-3 py-1 bg-slate-100 text-slate-600 text-xs font-black rounded-lg uppercase">${t.day}</div>
-                <div class="text-xs font-bold ${pc} uppercase flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-current"></span> ${t.priority}</div>
+        </div>`;
+    });
+    ht += `</div>`;
+    return ht;
+}
+
+// --- V12: Hexagons Outline ---
+function viewTasks12_Hexagons() {
+    let ht = `<div class="max-w-5xl mx-auto flex flex-wrap justify-center gap-4">`;
+    state.tasks.forEach(task => {
+        let bColor = task.status==='done'?'border-emerald-400':'border-slate-300';
+        if(task.status!=='done' && task.priority==='high') bColor = 'border-rose-400';
+        
+        ht += `<div class="relative w-44 h-48 flex items-center justify-center">
+            <svg class="absolute inset-0 w-full h-full text-transparent hover:text-slate-50 transition-colors drop-shadow-sm" viewBox="0 0 100 100">
+                <polygon points="50,2 96,25 96,75 50,98 4,75 4,25" fill="currentColor" stroke="currentColor" stroke-width="2" class="${bColor.replace('border-','stroke-')}"/>
+            </svg>
+            <div class="relative z-10 p-4 text-center flex flex-col items-center justify-center h-full w-full">
+                <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">${task.day}</div>
+                <div class="font-bold text-sm text-slate-800 leading-tight line-clamp-3 ${task.status==='done'?'line-through opacity-50':''}">${task.title}</div>
+            </div>
+        </div>`;
+    });
+    ht += `</div>`;
+    return ht;
+}
+
+// --- V13: Minimal List ---
+function viewTasks13_MinimalList() {
+    let ht = `<div class="max-w-3xl mx-auto space-y-1">`;
+    state.tasks.forEach(task => {
+        let c = task.status==='done'?'text-emerald-500':'text-slate-300';
+        ht += `<div class="flex items-center gap-4 p-2 hover:bg-slate-50 cursor-pointer group rounded-lg">
+            <div class="${c} group-hover:text-indigo-500 transition-colors">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12l2 2 4-4" class="${task.status==='done'?'':'hidden'}"/></svg>
+            </div>
+            <div class="font-medium text-slate-700 flex-1 ${task.status==='done'?'line-through opacity-50':''}">${task.title}</div>
+            <div class="text-xs font-mono text-slate-400 w-16 text-right">${task.day}</div>
+        </div>`;
+    });
+    ht += `</div>`;
+    return ht;
+}
+
+// --- V14: Circle Progress Cards ---
+function viewTasks14_CircleProgress() {
+    let ht = `<div class="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">`;
+    state.tasks.forEach(task => {
+        let pct = task.status==='done' ? 100 : task.status==='inprogress' ? 50 : 0;
+        let c = task.status==='done' ? '#10b981' : task.status==='inprogress' ? '#3b82f6' : '#cbd5e1';
+        
+        ht += `<div class="bg-white border border-slate-200 rounded-3xl p-4 flex flex-col items-center text-center shadow-sm hover:border-indigo-300 transition-colors cursor-pointer group">
+            <div class="relative w-16 h-16 mb-3">
+                <svg class="w-16 h-16 transform -rotate-90" viewBox="0 0 36 36">
+                    <circle cx="18" cy="18" r="16" fill="none" class="stroke-slate-100" stroke-width="3"></circle>
+                    <circle cx="18" cy="18" r="16" fill="none" stroke="${c}" stroke-width="3" stroke-dasharray="100 100" stroke-dashoffset="${100-pct}" class="transition-all duration-1000"></circle>
+                </svg>
+                <div class="absolute inset-0 flex items-center justify-center font-black text-[10px] text-slate-600">${pct}%</div>
+            </div>
+            <div class="font-bold text-sm text-slate-700 leading-tight mb-2 flex-1 group-hover:text-indigo-600 transition-colors">${task.title}</div>
+            <div class="text-[9px] font-black uppercase text-slate-400 tracking-widest">${task.day}</div>
+        </div>`;
+    });
+    ht += `</div>`;
+    return ht;
+}
+
+// --- V15: Grid 3D ---
+function viewTasks15_Grid3D() {
+    let ht = `<div class="max-w-6xl mx-auto flex flex-wrap gap-6 justify-center p-8">`;
+    state.tasks.forEach((task, i) => {
+        let d = i%2===0 ? 'translate-y-2' : '-translate-y-2';
+        let bg = task.status==='done'?'bg-emerald-500 text-white':'bg-white text-slate-800';
+        let bdr = task.status==='done'?'border-emerald-600':'border-slate-300';
+        
+        ht += `<div class="${bg} w-48 h-48 rounded-2xl p-5 flex flex-col justify-between shadow-[8px_8px_0px_rgba(0,0,0,0.1)] hover:shadow-[4px_4px_0px_rgba(0,0,0,0.1)] hover:translate-x-1 hover:translate-y-1 transition-all border-2 ${bdr} ${d} cursor-pointer group">
+            <div class="flex justify-between items-start">
+                <div class="font-black text-2xl opacity-20">#${i+1}</div>
+                <div class="text-xs font-bold uppercase tracking-widest opacity-60">${task.day}</div>
+            </div>
+            <div class="font-bold text-lg leading-tight ${task.status==='done'?'line-through opacity-80':''}">${task.title}</div>
+            <div class="h-1 w-8 rounded-full bg-current opacity-30 group-hover:w-full transition-all duration-300"></div>
+        </div>`;
+    });
+    ht += `</div>`;
+    return ht;
+}
+
+
+// ================ UNIFIED DESIGN TASKS VIEWS (V16-V20) ================
+function viewTasks16_UniKanban() {
+    let ht = `<div class="max-w-6xl mx-auto columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-4 space-y-4">`;
+    state.tasks.forEach(task => {
+        let sc = task.status==='done'?'opacity-50 line-through grayscale':'';
+        let ph = task.priority === 'high' ? 'text-rose-600 bg-rose-50' : task.priority === 'medium' ? 'text-amber-600 bg-amber-50' : 'text-blue-600 bg-blue-50';
+        
+        ht += `<div class="break-inside-avoid bg-white border border-slate-100 rounded-[20px] shadow-sm p-5 hover:shadow-md transition-shadow ${sc}">
+            <div class="flex justify-between items-center mb-4">
+                <span class="px-2 py-0.5 rounded text-[9px] uppercase font-black ${ph}">${task.priority}</span>
+                <span class="text-slate-400 text-[10px] font-bold leading-none bg-slate-50 px-2.5 py-1 rounded-md tracking-wider">${task.day}</span>
+            </div>
+            <div class="text-slate-800 font-bold text-[15px] leading-tight">${task.title}</div>
+        </div>`;
+    });
+    ht += `</div>`;
+    return ht;
+}
+
+function viewTasks17_UniVertBar() {
+    let ht = `<div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4">`;
+    state.tasks.forEach(task => {
+        let sc = task.status==='done'?'opacity-50 line-through grayscale':'';
+        let col = task.priority === 'high' ? 'bg-rose-500' : task.priority === 'medium' ? 'bg-amber-400' : 'bg-blue-500';
+        
+        ht += `<div class="bg-white border border-slate-100 rounded-2xl shadow-sm p-4 flex gap-4 items-center hover:-translate-y-0.5 transition-transform ${sc}">
+            <div class="font-black text-lg text-slate-700 w-10 text-center shrink-0 tracking-tighter">${task.day}</div>
+            <div class="w-1 h-10 rounded-full shrink-0 ${col}"></div>
+            <div class="flex-1 min-w-0">
+                <div class="text-slate-800 font-black tracking-wide text-sm truncate">${task.title}</div>
+                <div class="text-slate-400 text-[10px] font-bold mt-1 truncate uppercase">${task.priority} приоритет</div>
+            </div>
+        </div>`;
+    });
+    ht += `</div>`;
+    return ht;
+}
+
+function viewTasks18_UniSolidTags() {
+    let ht = `<div class="max-w-6xl mx-auto columns-1 sm:columns-2 lg:columns-3 gap-5 space-y-5">`;
+    state.tasks.forEach(task => {
+        let sc = task.status==='done'?'opacity-50 line-through grayscale':'';
+        let bgCol = task.priority === 'high' ? 'bg-rose-500' : task.priority === 'medium' ? 'bg-amber-500' : 'bg-blue-500';
+        
+        ht += `<div class="break-inside-avoid bg-white border border-slate-100 rounded-[24px] shadow-sm p-5 flex flex-col hover:border-indigo-200 transition-colors h-full ${sc}">
+            <div class="flex justify-between items-start mb-5">
+                <span class="px-2 py-1 text-white rounded-md text-[9px] uppercase font-black tracking-widest leading-none shadow-sm ${bgCol}">${task.priority}</span>
+                <span class="font-black text-slate-500 bg-slate-50 px-3 py-1 rounded-lg text-xs font-mono border border-slate-100">${task.day}</span>
+            </div>
+            <div class="text-slate-800 font-bold mb-5 flex-1 text-[16px] leading-tight">${task.title}</div>
+            <div class="flex justify-between items-center text-[10px] text-slate-400 font-bold pt-3 border-t border-slate-50 uppercase tracking-widest">
+                <span>${task.status}</span>
+            </div>
+        </div>`;
+    });
+    ht += `</div>`;
+    return ht;
+}
+
+function viewTasks19_UniBorderBottom() {
+    let ht = `<div class="max-w-5xl mx-auto space-y-3">`;
+    state.tasks.forEach(task => {
+        let sc = task.status==='done'?'opacity-50 line-through grayscale':'';
+        let bBottomCol = task.priority === 'high' ? 'border-b-rose-400' : task.priority === 'medium' ? 'border-b-amber-400' : 'border-b-blue-400';
+        
+        ht += `<div class="bg-white border text-sm border-slate-100 shadow-sm rounded-2xl p-4 border-b-4 flex flex-col sm:flex-row justify-between sm:items-center hover:bg-slate-50 transition-colors cursor-pointer ${bBottomCol} ${sc}">
+            <div class="font-black text-slate-800 text-[15px] pr-4 leading-tight mb-3 sm:mb-0">${task.title}</div>
+            <div class="flex items-center justify-between sm:w-auto w-full gap-4">
+                <div class="text-[10px] uppercase font-black text-slate-400 tracking-wider">${task.priority}</div>
+                <div class="font-black text-slate-400 text-sm font-mono shrink-0 bg-slate-50 px-2.5 py-1 rounded-lg">${task.day}</div>
+            </div>
+        </div>`;
+    });
+    ht += `</div>`;
+    return ht;
+}
+
+function viewTasks20_UniMinimalist() {
+    let ht = `<div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">`;
+    state.tasks.forEach(task => {
+        let sc = task.status==='done'?'opacity-50 grayscale':'';
+        let bgCol = task.priority === 'high' ? 'bg-rose-500' : task.priority === 'medium' ? 'bg-amber-400' : 'bg-blue-500';
+        
+        ht += `<div class="bg-white rounded-[24px] shadow-sm border border-slate-100 overflow-hidden flex flex-col group hover:shadow-md hover:border-slate-300 transition-all cursor-pointer ${sc}">
+            <div class="p-5 flex justify-between items-center bg-gradient-to-br from-white to-slate-50/50 gap-4">
+                 <div class="text-[14px] font-black text-slate-800 flex-1 leading-tight ${task.status==='done'?'line-through':''}">${task.title}</div>
+                 <div class="px-2 py-1 ${bgCol} text-white rounded-lg text-[9px] font-black shadow-sm shrink-0 uppercase tracking-widest">${task.priority}</div>
+            </div>
+            <div class="bg-slate-50/80 px-5 py-3 border-t border-slate-100 flex gap-4 text-[10px] font-bold text-slate-500 justify-between items-center">
+                <span class="flex items-center gap-2 uppercase tracking-widest"><div class="w-2 h-2 rounded-full ${bgCol}"></div>${task.status==='done'?'Готово':'В работе'}</span>
+                <span class="bg-white px-2.5 py-1.5 rounded shadow-sm border border-slate-100 tracking-wider text-slate-600">${task.day}</span>
             </div>
         </div>`;
     });
