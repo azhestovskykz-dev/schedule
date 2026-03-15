@@ -1,1171 +1,437 @@
-// Глобальное состояние
-let state = {
-    schedule: {},
-    editMode: true,
-    draggedElement: null,
-    currentDay: null,
-    currentTime: null,
-    editingId: null,
-    isDraft: false,
+// ===================== STATE =====================
+const state = {
+    tab: 'today',      // 'today', 'week', 'analytics', 'settings'
+    subTab: 'schedule',// 'schedule', 'plan', 'fact'
+    schedule: {},      // original format: {day: {hour: [...]}}
     teachers: [],
-    editingTeacherId: null,
     subjects: [],
-    editingSubjectId: null,
-    currentUser: null, // "admin" (Андрей) или "user" (Никита)
-    sleepData: {},
-    activeMobileDay: 'Пн' // Изначально выбран Понедельник для моб. версии
+    activeWeekDay: 'Пн', // legacy or for scrolling
+    isDraft: false
 };
 
 const DAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
-const START_HOUR = 7;
-const END_HOUR = 21;
+const TIMES = [
+    "08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00",
+    "16:00","17:00","18:00","19:00","20:00","21:00","22:00"
+];
 
-// Цвета предметов
-const SUBJECT_COLORS = {
-    'Английский': { bg: '#ffeaa7', text: '#d35400' },
-    'Математика': { bg: '#fab1a0', text: '#c0392b' },
-    'Каллиграфия': { bg: '#e1b12c', text: '#ffffff' },
-    'Логопедия': { bg: '#00b894', text: '#ffffff' },
-    'Речь': { bg: '#55efc4', text: '#2d3436' },
-    'Русский': { bg: '#74b9ff', text: '#ffffff' },
-    'Скорочтение': { bg: '#0984e3', text: '#ffffff' },
-    'Дефектолог': { bg: '#6c5ce7', text: '#ffffff' },
-    'Баскетбол': { bg: '#d63031', text: '#ffffff' },
-    'Волейбол': { bg: '#e84393', text: '#ffffff' },
-    'Бассейн': { bg: '#81ecec', text: '#2d3436' },
-    'Айкидо': { bg: '#00cec9', text: '#ffffff' },
-    'Шахматы': { bg: '#b2bec3', text: '#2d3436' },
-    'Барабаны': { bg: '#fdcb6e', text: '#2d3436' },
-    'Массаж': { bg: '#a29bfe', text: '#ffffff' }
+// Settings from previous implementation
+const DEFAULT_SUBJECTS = ['Математика','Русский язык','Английский','Казахский','Литература'];
+
+// ===================== ICONS =====================
+const ICONS = {
+    plus: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
+    clock: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
+    phone: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>`,
+    video: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>`,
+    trash: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>`,
+    edit: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>`,
+    comment: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`
 };
 
-const DEFAULT_COLOR = { bg: '#dfe6e9', text: '#2d3436' };
-
-// Платформы
-const PLATFORMS = {
-    'teams': { icon: '🟦', name: 'Teams', color: '#6264a7' },
-    'zoom': { icon: '📹', name: 'Zoom', color: '#2d8cff' },
-    'telegram': { icon: '📨', name: 'Telegram', color: '#26a5e4' },
-    'yandex': { icon: '🟡', name: 'Я.Телемост', color: '#fc3f1d' },
-    'skype': { icon: '💬', name: 'Skype', color: '#00aff0' },
-    'website': { icon: '🌐', name: 'Сайт', color: '#0ea5e9' },
-    'offline': { icon: '🚶', name: 'Очно', color: '#10b981' }
+// ===================== UTILS =====================
+const getTodayName = () => {
+    const d = new Date().getDay();
+    return DAYS[d === 0 ? 6 : d - 1] || 'Пн';
 };
 
-// =========================================
-// АВТОРИЗАЦИЯ
-// =========================================
-function initAuth() {
-    const savedUser = localStorage.getItem('schedule_user');
-    if (savedUser) {
-        state.currentUser = savedUser;
-        showApp();
+const getSubjectColor = (subjName) => {
+    const s = state.subjects.find(x => x.name === subjName);
+    return s ? s.color : '#3b82f6';
+};
+
+function hexToRgba(hex, alpha) {
+    if (!hex) return `rgba(59, 130, 246, ${alpha})`;
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+const fmtNum = n => n ? n.toLocaleString('ru-RU').replace(/\u00A0/g,' ')+' ₸' : '0 ₸';
+
+// ===================== INIT & DATA LOAD =====================
+window.onload = () => {
+    loadData();
+    state.activeWeekDay = getTodayName();
+};
+
+function loadData() {
+    // Attempt local storage load
+    const saved = localStorage.getItem('scheduleData');
+    if (saved) {
+        try {
+            const data = JSON.parse(saved);
+            Object.assign(state, data); // load subjects, teachers, schedule
+        } catch(e) { console.error('Error loading local data'); }
     } else {
-        showLogin();
-    }
-
-    document.getElementById('loginForm').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const user = document.getElementById('username').value;
-        const pass = document.getElementById('password').value;
-        const err = document.getElementById('loginError');
-
-        if (!user) return;
-
-        // Пароль 12345678 для обоих (простейшая проверка через base64: MTIzNDU2Nzg=)
-        if (btoa(pass) === 'MTIzNDU2Nzg=') {
-            state.currentUser = user;
-            localStorage.setItem('schedule_user', user);
-            showApp();
-        } else {
-            err.style.display = 'block';
-            setTimeout(() => err.style.display = 'none', 3000);
-        }
-    });
-
-    document.getElementById('logoutBtn').addEventListener('click', () => {
-        localStorage.removeItem('schedule_user');
-        state.currentUser = null;
-        location.reload();
-    });
-}
-
-function showLogin() {
-    document.getElementById('loginOverlay').classList.add('active');
-    document.getElementById('app').style.display = 'none';
-}
-
-function showApp() {
-    document.getElementById('loginOverlay').classList.remove('active');
-    document.getElementById('app').style.display = 'flex';
-    
-    // Инициализация темы
-    initTheme();
-    // Применение ролей
-    applyRoles();
-    
-    // Запуск приложения
-    loadState();
-    migratePlatforms();
-    loadSleepData();
-    initGrid();
-    initMobileTabs();
-    setupEventListeners();
-    setupContextMenu();
-    renderSchedule();
-    renderSubjectsList();
-    renderTeachersList();
-}
-
-function applyRoles() {
-    const badge = document.getElementById('currentUserDisplay');
-    
-    if (state.currentUser === 'admin') {
-        badge.textContent = '👤 Андрей (Админ)';
-        // Админ, все доступы открыты - восстанавливаем сохраненный editMode (если есть логика) или включаем по умолчанию
-        state.editMode = document.getElementById('modeToggle').checked;
-    } else {
-        badge.textContent = '👁 Никита (Зритель)';
-        // Пользователь Никита - только просмотр
-        state.editMode = false;
+        // Mock default data
+        state.subjects = DEFAULT_SUBJECTS.map((name, i) => ({
+            id: 's'+i, name, color: ['#ef4444','#f59e0b','#10b981','#3b82f6','#8b5cf6'][i%5]
+        }));
+        state.teachers = [
+            {id:'t1', name:'Иванова Анна', cost: 5000, phone:'+77001234567', platform:'Zoom', link:'https://zoom.us/j/123456'},
+            {id:'t2', name:'Петров Иван', cost: 4000, phone:'+77009876543', platform:'Google Meet', link:''}
+        ];
         
-        // Скрываем элементы управления редактированием
-        document.getElementById('editModeToggleGroup').style.display = 'none';
-        document.getElementById('manageTeachersBtn').style.display = 'none';
-        document.getElementById('logSleepBtn').style.display = 'none';
-        
-        // Применяем CSS класс view-mode на body
-        document.body.classList.add('view-mode');
-    }
-}
-
-function initTheme() {
-    const savedTheme = localStorage.getItem('schedule_theme') || 'dark';
-    if (savedTheme === 'light') {
-        document.documentElement.classList.add('theme-light');
-    }
-    
-    const themeBtn = document.getElementById('themeToggleBtn');
-    if(themeBtn) {
-        themeBtn.textContent = savedTheme === 'light' ? '🌜' : '🌞';
-        themeBtn.addEventListener('click', () => {
-            document.documentElement.classList.toggle('theme-light');
-            const isLight = document.documentElement.classList.contains('theme-light');
-            localStorage.setItem('schedule_theme', isLight ? 'light' : 'dark');
-            themeBtn.textContent = isLight ? '🌜' : '🌞';
-        });
-    }
-}
-
-// =========================================
-// ОСНОВНАЯ ЛОГИКА
-// =========================================
-function initGrid() {
-    const grid = document.getElementById('scheduleGrid');
-    grid.innerHTML = '';
-    
-    // Header
-    grid.style.gridTemplateColumns = `60px repeat(${DAYS.length}, 1fr)`; // Компактнее первой колонке
-    grid.appendChild(createCell('grid-header', ''));
-    DAYS.forEach(day => grid.appendChild(createCell('grid-header day-name', day)));
-    
-    // Cells
-    for (let hour = START_HOUR; hour <= END_HOUR; hour++) {
-        const timeStr = `${hour.toString().padStart(2, '0')}:00`;
-        grid.appendChild(createCell('time-label', timeStr));
-        
-        DAYS.forEach(day => {
-            const cell = createCell('grid-cell', '');
-            cell.dataset.day = day;
-            cell.dataset.time = timeStr;
-            grid.appendChild(cell);
-        });
-    }
-
-    // Summary row
-    grid.appendChild(createCell('summary-cell summary-label', 'Итого'));
-    DAYS.forEach(day => {
-        const cell = createCell('summary-cell', '');
-        cell.id = `summary-${day}`;
-        cell.dataset.day = day;
-        grid.appendChild(cell);
-    });
-}
-
-function initMobileTabs() {
-    const tabsContainer = document.getElementById('mobileDayTabs');
-    if (!tabsContainer) return;
-    tabsContainer.innerHTML = '';
-    
-    // Set actual active day based on today if not already set manually
-    if (!state.activeMobileDay) {
-        const todayIdx = new Date().getDay(); // 0 is Sunday
-        const mappedIdx = todayIdx === 0 ? 6 : todayIdx - 1; // Map to 0=Mon, 6=Sun
-        state.activeMobileDay = DAYS[mappedIdx] || 'Пн';
-    }
-
-    DAYS.forEach(day => {
-        const btn = document.createElement('button');
-        btn.className = `mobile-tab-btn ${state.activeMobileDay === day ? 'active' : ''}`;
-        btn.textContent = day;
-        btn.dataset.tabDay = day;
-        btn.onclick = () => {
-            state.activeMobileDay = day;
-            document.querySelectorAll('.mobile-tab-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            updateActiveMobileColumn();
+        const today = getTodayName();
+        state.schedule[today] = {
+            "10:00": [{ id:'b1', subjectId:'s0', teacherId:'t1', variant:'1', duration:60, isPaid: false }],
+            "15:00": [{ id:'b2', subjectId:'s2', teacherId:'t2', variant:'1', duration:90, isPaid: true, comment: 'Подготовиться к тесту' }]
         };
-        tabsContainer.appendChild(btn);
-    });
-}
-
-function updateActiveMobileColumn() {
-    // Удаляем предыдущий активный класс
-    document.querySelectorAll('.active-mobile-day').forEach(el => el.classList.remove('active-mobile-day'));
-    
-    // Добавляем новый
-    if (state.activeMobileDay) {
-        document.querySelectorAll(`[data-day="${state.activeMobileDay}"]`).forEach(el => {
-            el.classList.add('active-mobile-day');
-        });
     }
-}
-
-function createCell(className, content) {
-    const div = document.createElement('div');
-    div.className = className;
-    if (content) div.innerHTML = content;
-    return div;
-}
-
-// =========================================
-// TEACHERS
-// =========================================
-function getTeacherById(id) {
-    return state.teachers.find(t => t.id === id);
-}
-
-// =========================================
-// RENDER SCHEDULE
-// =========================================
-function renderSchedule() {
-    document.querySelectorAll('.grid-cell').forEach(cell => cell.innerHTML = '');
-    let analytics = {}; // { subject: min }
-    let dailyStats = {}; // { day: { lessons: 0, subjects: new Set(), duration: 0 } }
     
-    DAYS.forEach(d => dailyStats[d] = { lessons: 0, subjects: new Set(), duration: 0 });
-
-    Object.values(state.schedule).forEach(item => {
-        const cell = document.querySelector(`.grid-cell[data-day="${item.day}"][data-time="${item.time}"]`);
-        if (!cell) return;
-
-        // Нормализация старых данных: Агапе/Логопед -> Логопедия, Калиграф -> Каллиграфия
-        let normSubject = item.subject;
-        if (normSubject.includes('Агапе') || normSubject === 'Логопед') normSubject = 'Логопедия';
-        if (normSubject === 'Калиграф' || normSubject === 'Калиграфия') normSubject = 'Каллиграфия';
-
-        // Update analytics
-        if (!analytics[normSubject]) analytics[normSubject] = { min: 0, count: 0 };
-        analytics[normSubject].min += Number(item.duration);
-        analytics[normSubject].count += 1;
-
-        // Daily stats
-        dailyStats[item.day].lessons += 1;
-        dailyStats[item.day].subjects.add(normSubject);
-        dailyStats[item.day].duration += Number(item.duration);
-
-        const tInfo = getTeacherById(item.teacherId);
-        const tNameText = tInfo ? tInfo.name : item.teacherName || 'Не указан';
-        const tPlatform = tInfo && tInfo.platform && PLATFORMS[tInfo.platform] 
-            ? `<a href="${tInfo.platformLink || '#'}" target="_blank" class="platform-badge" title="${PLATFORMS[tInfo.platform].name}">${PLATFORMS[tInfo.platform].icon} ${PLATFORMS[tInfo.platform].name}</a>` 
-            : '';
-
-        const subjObj = state.subjects.find(s => s.name === normSubject);
-        const subjColor = subjObj ? subjObj.color : (SUBJECT_COLORS[normSubject] ? SUBJECT_COLORS[normSubject].bg : DEFAULT_COLOR.bg);
-
-        const block = document.createElement('div');
-        block.style.setProperty('--subject-color', subjColor);
-        // Добавляем прозрачность цвета в переменную (RGBA approximation helper is not here, so we will use absolute fallback or just subjColor in CSS)
-        // Для CSS переменной добавим:
-        block.style.setProperty('--subject-color-alpha', subjColor + '33');
-        
-        block.draggable = state.editMode;
-        block.dataset.id = item.id;
-        block.className = `schedule-block`; // Применяем базовый класс карточки Канбан
-        
-        let actionsHtml = '';
-        if (state.editMode) {
-            actionsHtml = `
-                <div class="block-actions" style="color: #333;">
-                    <button class="action-icon" onclick="editItem('${item.id}', event)" title="Редактировать">📝</button>
-                    <button class="action-icon delete-icon" onclick="deleteItem('${item.id}', event)" title="Удалить">🗑</button>
-                </div>
-            `;
-        }
-
-        // Tag row
-        let topHtml = `
-            <div class="block-tag-list">
-                <span class="block-tag">${normSubject}</span>
-            </div>
-        `;
-
-        // Title (Teacher)
-        let titleHtml = `
-            <div class="block-title">${tNameText}</div>
-        `;
-
-        // Добавляем телефон, если есть
-        const tPhone = tInfo && tInfo.phone ? tInfo.phone : '';
-        const tPhoneHtml = tPhone ? `<div class="block-info-row block-phone"><i>📞</i> <a href="tel:${tPhone}">${tPhone}</a></div>` : '';
-
-        // Иконка платформы — кликабельная, если есть
-        let platformBadgeHtml = '';
-        if (tInfo && tInfo.platform && PLATFORMS[tInfo.platform]) {
-            const p = PLATFORMS[tInfo.platform];
-            let link = tInfo.platformLink || '#';
-            if (tInfo.platform === 'telegram' && tPhone && !link.includes('t.me') && !link.includes('://')) {
-                link = `tg://resolve?phone=${tPhone.replace(/\D/g, '')}`;
-            }
-            platformBadgeHtml = `<a href="${link}" target="_blank" class="platform-icon-badge" title="${p.name}" style="background:${p.color}22; border:1px solid ${p.color}44;">${p.icon}</a>`;
-        }
-
-        // Комментарий (если есть)
-        const commentHtml = item.comment 
-            ? `<div class="block-comment" title="${item.comment}">💬 ${item.comment}</div>` 
-            : '';
-
-        // Footer 
-        let footerHtml = `
-            <div class="block-footer">
-                <span class="block-duration-badge"><i>⏱</i> ${item.duration} мин</span>
-                ${platformBadgeHtml}
-            </div>
-        `;
-
-        block.innerHTML = `
-            ${actionsHtml}
-            ${topHtml}
-            ${titleHtml}
-            ${tPhoneHtml}
-            ${commentHtml}
-            ${footerHtml}
-        `;
-
-        if (state.editMode) {
-            block.addEventListener('dragstart', handleDragStart);
-            block.addEventListener('dragend', handleDragEnd);
-        }
-        
-        // Context menu listener
-        block.addEventListener('contextmenu', (e) => handleContextMenu(e, item, tInfo));
-        
-        cell.appendChild(block);
+    // Ensure all days/times mapped
+    DAYS.forEach(d => {
+        if(!state.schedule[d]) state.schedule[d] = {};
+        TIMES.forEach(t => { if(!state.schedule[d][t]) state.schedule[d][t] = []; });
     });
 
-    renderDailySummary(dailyStats);
-    updateAnalytics(analytics);
-    updateActiveMobileColumn();
+    render();
 }
 
-function renderDailySummary(stats) {
-    DAYS.forEach(day => {
-        const cell = document.getElementById(`summary-${day}`);
-        const data = stats[day];
-        if (data.lessons === 0) {
-            cell.innerHTML = '<span style="color:#aaa;font-size:12px;">Выходной</span>';
-        } else {
-            cell.innerHTML = `
-                <div class="summary-row">📚 ${data.lessons} зан.</div>
-                <div class="summary-row">🎯 ${data.subjects.size} предм.</div>
-                <div class="summary-row">⏱ ${(data.duration / 60).toFixed(1)} ч</div>
-            `;
-        }
-    });
-}
-
-function updateAnalytics(analytics) {
-    let totalMin = Object.values(analytics).reduce((sum, s) => sum + s.min, 0);
-    const totalHours = (totalMin / 60).toFixed(1);
-    document.getElementById('studyTimeText').textContent = `${totalHours} ч`;
-
-    let totalSleepMins = 0;
-    Object.values(state.sleepData).forEach(m => totalSleepMins += Number(m));
-    const totalSleepHours = (totalSleepMins / 60).toFixed(1);
-    
-    // Свободное время = 7 дней * 24 часа = 168 ч - Учеба - Сон
-    // или считаем от активного времени
-    let freeHours = (168 - totalHours - totalSleepHours).toFixed(1);
-    if(freeHours < 0) freeHours = 0;
-    document.getElementById('restTimeText').textContent = `${freeHours} ч`;
-
-    const subjectBreakdownArea = document.getElementById('subjectBreakdownArea');
-    subjectBreakdownArea.innerHTML = '';
-    
-    Object.entries(analytics).sort((a,b) => b[1].min - a[1].min).forEach(([name, data]) => {
-        const sc = SUBJECT_COLORS[name] || DEFAULT_COLOR;
-        const card = document.createElement('div');
-        card.className = 'subject-card';
-        card.style.backgroundColor = sc.bg;
-        card.innerHTML = `
-            <span class="subject-name">${name}</span>
-            <span class="subject-hours">${(data.min / 60).toFixed(1)} ч (${data.min} м, ${data.count} з.)</span>
-        `;
-        subjectBreakdownArea.appendChild(card);
-    });
-}
-
-// =========================================
-// CONTEXT MENU LOGIC (Right Click)
-// =========================================
-function setupContextMenu() {
-    // Закрытие меню по клику в любом месте экрана
-    document.addEventListener('click', (e) => {
-        const menu = document.getElementById('contextMenu');
-        if (menu && menu.classList.contains('active')) {
-            menu.classList.remove('active');
-        }
-    });
-
-    function hideContextMenu() {
-        document.getElementById('contextMenu').classList.remove('active');
-    }
-
-    // Обработчики кнопок меню
-    document.getElementById('cmEdit').addEventListener('click', (e) => {
-        const id = state.contextMenuTargetId;
-        if (id) window.editItem(id, e);
-        hideContextMenu();
-    });
-
-    document.getElementById('cmDelete').addEventListener('click', (e) => {
-        const id = state.contextMenuTargetId;
-        if (id) window.deleteItem(id, e);
-        hideContextMenu();
-    });
-
-    document.getElementById('cmComment').addEventListener('click', (e) => {
-        const id = state.contextMenuTargetId;
-        if (!id) return;
-        hideContextMenu();
-        const item = state.schedule[id];
-        const text = prompt('Введите комментарий к занятию:', item.comment || '');
-        if (text !== null) {
-            item.comment = text.trim();
-            saveState();
-            renderSchedule();
-        }
-    });
-}
-
-function handleContextMenu(e, item, tInfo) {
-    if (!state.editMode) return; // Меню доступно только в режиме редактирования/админа
-    if (e && e.preventDefault) e.preventDefault(); // Отменяем стандартное меню браузера
-
-    const menu = document.getElementById('contextMenu');
-    state.contextMenuTargetId = item.id; // Запоминаем, для какого элемента открыли
-
-    // Настраиваем кнопку "Позвонить"
-    const callBtn = document.getElementById('cmCall');
-    if (tInfo && tInfo.phone) {
-        callBtn.style.display = 'flex';
-        callBtn.href = `tel:${tInfo.phone}`;
-    } else {
-        callBtn.style.display = 'none';
-        callBtn.href = '#';
-    }
-
-    // Настраиваем кнопку "Написать" (Telegram)
-    const writeBtn = document.getElementById('cmWrite');
-    if (tInfo && tInfo.platform === 'telegram' && (tInfo.platformLink || tInfo.phone)) {
-        writeBtn.style.display = 'flex';
-        let link = tInfo.platformLink;
-        if (!link || (!link.includes('t.me') && !link.includes('://'))) {
-            link = `tg://resolve?phone=${tInfo.phone.replace(/[^0-9+]/g, '')}`;
-        }
-        writeBtn.href = link;
-    } else {
-        writeBtn.style.display = 'none';
-        writeBtn.href = '#';
-    }
-
-    // Позиционируем меню
-    menu.classList.add('active');
-    
-    // Проверяем, не вылезает ли меню за пределы экрана
-    let x = e.clientX;
-    let y = e.clientY;
-    const menuWidth = menu.offsetWidth || 220;
-    const menuHeight = menu.offsetHeight || 180;
-    
-    if (x + menuWidth > window.innerWidth) x = window.innerWidth - menuWidth - 10;
-    if (y + menuHeight > window.innerHeight) y = window.innerHeight - menuHeight - 10;
-
-    menu.style.left = `${x}px`;
-    menu.style.top = `${y}px`;
-}
-
-// =========================================
-// Drag and Drop (Только Админ)
-// =========================================
-function handleDragStart(e) {
-    if (!state.editMode) return;
-    state.draggedElement = e.target;
-    e.target.style.opacity = '0.5';
-    // Для совместимости с Firefox
-    if(e.dataTransfer) e.dataTransfer.setData('text/plain', e.target.dataset.id);
-}
-
-function handleDragEnd(e) {
-    e.target.style.opacity = '1';
-    document.querySelectorAll('.grid-cell').forEach(c => c.classList.remove('drag-over'));
-}
-
-function setupEventListeners() {
-    const grid = document.getElementById('scheduleGrid');
-    
-    grid.addEventListener('dragover', e => {
-        if (!state.editMode) return;
-        e.preventDefault();
-        const cell = e.target.closest('.grid-cell');
-        if (cell) cell.classList.add('drag-over');
-    });
-
-    grid.addEventListener('dragleave', e => {
-        if (!state.editMode) return;
-        const cell = e.target.closest('.grid-cell');
-        if (cell) cell.classList.remove('drag-over');
-    });
-
-    grid.addEventListener('drop', e => {
-        if (!state.editMode) return;
-        e.preventDefault();
-        const cell = e.target.closest('.grid-cell');
-        if (cell && state.draggedElement) {
-            cell.classList.remove('drag-over');
-            const id = state.draggedElement.dataset.id;
-            state.schedule[id].day = cell.dataset.day;
-            state.schedule[id].time = cell.dataset.time;
-            saveState();
-            renderSchedule();
-        }
-    });
-
-    grid.addEventListener('click', e => {
-        if (!state.editMode) return;
-        const cell = e.target.closest('.grid-cell');
-        if (!cell || e.target.closest('.schedule-block')) return;
-        
-        state.currentDay = cell.dataset.day;
-        state.currentTime = cell.dataset.time;
-        state.editingId = null;
-        
-        populateTeacherSelect();
-        populateSubjectSelect();
-        document.getElementById('scheduleForm').reset();
-        document.getElementById('modalTitle').textContent = `Занятие (${state.currentDay} ${state.currentTime})`;
-        document.getElementById('modalOverlay').classList.add('active');
-    });
-
-    // Обработчик тумблера
-    document.getElementById('modeToggle').addEventListener('change', (e) => {
-        if(state.currentUser !== 'admin') {
-            e.target.checked = false; // блочим
-            return;
-        }
-        state.editMode = e.target.checked;
-        document.body.classList.toggle('view-mode', !state.editMode);
-        renderSchedule();
-    });
-
-    // Tabs
-    document.getElementById('activeTab').addEventListener('click', () => switchTab(false));
-    document.getElementById('draftTab').addEventListener('click', () => switchTab(true));
-
-    // Form submission
-    document.getElementById('scheduleForm').addEventListener('submit', handleFormSubmit);
-    document.getElementById('closeModalBtn').addEventListener('click', () => {
-        document.getElementById('modalOverlay').classList.remove('active');
-    });
-
-    // Subjects Management
-    document.getElementById('addSubjectBtn').addEventListener('click', showAddSubjectForm);
-    document.getElementById('subjectForm').addEventListener('submit', handleSubjectSubmit);
-    document.getElementById('cancelSubjectEdit').addEventListener('click', () => {
-        document.getElementById('subjectEditModal').classList.remove('active');
-    });
-    document.getElementById('deleteSubjectBtn').addEventListener('click', handleDeleteSubject);
-
-    // Teacher Management
-    document.getElementById('addTeacherBtn').addEventListener('click', showAddTeacherForm);
-    document.getElementById('teacherForm').addEventListener('submit', handleTeacherSubmit);
-    document.getElementById('cancelTeacherEdit').addEventListener('click', () => {
-        document.getElementById('teacherEditModal').classList.remove('active');
-    });
-    document.getElementById('deleteTeacherBtn').addEventListener('click', handleDeleteTeacher);
-    document.getElementById('teacherSortBy').addEventListener('change', renderTeachersList);
-
-    // Mobile buttons (Toggle sidebars)
-    document.getElementById('mobileSubjectsBtn').addEventListener('click', () => {
-        document.getElementById('sidebarLeft').style.display = document.getElementById('sidebarLeft').style.display === 'flex' ? 'none' : 'flex';
-    });
-    document.getElementById('mobileTeachersBtn').addEventListener('click', () => {
-        document.getElementById('sidebarRight').style.display = document.getElementById('sidebarRight').style.display === 'flex' ? 'none' : 'flex';
-    });
-
-    // Toggle Analytics
-    const toggleAnalyticsBtn = document.getElementById('toggleAnalyticsBtn');
-    if (toggleAnalyticsBtn) {
-        toggleAnalyticsBtn.addEventListener('click', () => {
-            const body = document.getElementById('analyticsBody');
-            const isHidden = body.style.display === 'none' || body.style.display === '';
-            if (isHidden) {
-                body.style.display = 'block';
-                toggleAnalyticsBtn.textContent = '▴ Скрыть';
-            } else {
-                body.style.display = 'none';
-                toggleAnalyticsBtn.textContent = '▾ Открыть';
-            }
-        });
-    }
-
-    // Click outside modal to close
-    document.querySelectorAll('.modal-overlay').forEach(modal => {
-        modal.addEventListener('click', e => {
-            if (e.target === modal) modal.classList.remove('active');
-        });
-    });
-}
-
-function handleFormSubmit(e) {
-    e.preventDefault();
-    if (!state.editMode) return;
-
-    const teacherSelect = document.getElementById('teacherSelect');
-    
-    // Check for duplicate lesson in the exact same day/time slot
-    const day = state.editingId ? state.schedule[state.editingId].day : state.currentDay;
-    const time = state.editingId ? state.schedule[state.editingId].time : state.currentTime;
-    
-    // If we're creating a new item, and something already exists at this spot, give a warning!
-    if (!state.editingId) {
-        const existingAtSlot = Object.values(state.schedule).find(x => x.day === day && x.time === time);
-        if (existingAtSlot) {
-            if (!confirm(`В ячейке ${day} ${time} уже есть занятие (${existingAtSlot.subject}). Наложить еще одно? Можно будет удалять по отдельности.`)) {
-                return; // Отмена сохранения
-            }
-        }
-    }
-
-    const item = {
-        id: state.editingId || Date.now().toString(),
-        day: day,
-        time: time,
-        subject: document.getElementById('subjectInput').value,
-        teacherId: teacherSelect.value,
-        duration: document.getElementById('durationInput').value,
-        color: document.getElementById('colorInput').value
+function saveData() {
+    const toSave = { 
+        schedule: state.schedule, 
+        teachers: state.teachers, 
+        subjects: state.subjects 
     };
-
-    state.schedule[item.id] = item;
-    
-    document.getElementById('modalOverlay').classList.remove('active');
-    saveState();
-    renderSchedule();
+    localStorage.setItem('scheduleData', JSON.stringify(toSave));
+    render();
 }
 
-window.editItem = function(id, e) {
-    if (e && e.stopPropagation) e.stopPropagation();
-    if (!state.editMode) return;
-
-    const item = state.schedule[id];
-    state.editingId = id;
-    state.currentDay = item.day;
-    state.currentTime = item.time;
-    
-    populateTeacherSelect();
-    populateSubjectSelect();
-    
-    // Нормализация при открытии радактора
-    let nSubj = item.subject;
-    if (nSubj.includes('Агапе') || nSubj === 'Логопед') nSubj = 'Логопедия';
-    if (nSubj === 'Калиграф' || nSubj === 'Калиграфия') nSubj = 'Каллиграфия';
-
-    document.getElementById('subjectInput').value = nSubj;
-    document.getElementById('teacherSelect').value = item.teacherId || '';
-    document.getElementById('durationInput').value = item.duration;
-    document.getElementById('colorInput').value = item.color || '#0984e3';
-
-    document.getElementById('modalTitle').textContent = `Редактировать (${state.currentDay} ${state.currentTime})`;
-    document.getElementById('modalOverlay').classList.add('active');
+// ===================== NAVIGATION =====================
+window.setMainTab = (tab) => {
+    state.tab = tab;
+    render();
 };
 
-window.deleteItem = function(id, e) {
-    if (e && e.stopPropagation) e.stopPropagation();
-    if (!state.editMode) return;
+window.setSubTab = (subTab) => {
+    state.subTab = subTab;
+    render();
+};
+
+
+// ===================== RENDER CORE =====================
+function render() {
+    updateNavUI();
+    const area = document.getElementById('content-area');
     
-    if (confirm('Удалить предмет?')) {
-        delete state.schedule[id];
-        saveState();
-        renderSchedule();
+    if (state.tab === 'today') {
+        area.innerHTML = renderTodayTabs();
+    } else if (state.tab === 'week') {
+        area.innerHTML = renderWeekKanban();
+    } else if (state.tab === 'analytics') {
+        area.innerHTML = renderAnalytics();
+    } else if (state.tab === 'settings') {
+        area.innerHTML = renderSettings();
     }
 }
 
-// =========================================
-// SUBJECTS LOGIC
-// =========================================
-function renderSubjectsList() {
-    const list = document.getElementById('sidebarSubjectsList');
-    if(!list) return;
-    list.innerHTML = '';
-    
-    [...state.subjects].sort((a,b) => a.name.localeCompare(b.name)).forEach(s => {
-        const card = document.createElement('div');
-        card.className = 'teacher-card';
-        card.style.padding = '0';
-        card.style.overflow = 'hidden';
-        card.style.border = 'none';
-        card.style.background = 'var(--bg-card)';
-        card.innerHTML = `
-            <div style="background-color: ${s.color}; color: #fff; padding: 8px 12px; font-weight: 600; font-size: 14px; display: flex; justify-content: space-between; align-items: center;">
-                <span>${s.name}</span>
-                <button class="icon-only-btn" onclick="editSubject('${s.id}')" title="Редактировать" style="border-color: rgba(255,255,255,0.3); color: white;">✏️</button>
-            </div>
-        `;
-        list.appendChild(card);
+function updateNavUI() {
+    // Update Top Nav
+    ['today', 'week', 'analytics', 'settings'].forEach(t => {
+        const btn = document.getElementById(`main-tab-${t}`);
+        if(btn) {
+            btn.className = `nav-btn t-${t}-${state.tab === t ? 'active' : 'inactive'} font-bold`;
+        }
     });
+
+    // Sub Nav Visibility
+    const subNav = document.getElementById('sub-nav-today');
+    if(state.tab === 'today') {
+        subNav.classList.remove('hidden');
+        ['schedule','plan','fact'].forEach(st => {
+            const sb = document.getElementById(`sub-tab-${st}`);
+            if(sb) {
+                sb.className = `flex-1 py-1 px-2 text-center text-sm font-bold rounded-[10px] transition-all ` + 
+                               (state.subTab === st ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-500 hover:text-slate-800 bg-transparent');
+            }
+        });
+    } else {
+        subNav.classList.add('hidden');
+    }
 }
 
-window.editSubject = function(id) {
-    const s = state.subjects.find(x => x.id === id);
-    if (!s) return;
-    state.editingSubjectId = id;
-    
-    document.getElementById('subjectEditTitle').textContent = `📝 Редактировать предмет`;
-    document.getElementById('editSubjectId').value = s.id;
-    document.getElementById('subjNameInput').value = s.name;
-    document.getElementById('subjColorInput').value = s.color;
-    
-    document.getElementById('deleteSubjectBtn').style.display = 'block';
-    document.getElementById('subjectEditModal').classList.add('active');
-};
 
-function showAddSubjectForm() {
-    state.editingSubjectId = null;
-    document.getElementById('subjectForm').reset();
-    document.getElementById('subjectEditTitle').textContent = `➕ Новый предмет`;
-    document.getElementById('subjColorInput').value = '#0984e3';
-    document.getElementById('deleteSubjectBtn').style.display = 'none';
-    document.getElementById('subjectEditModal').classList.add('active');
-}
+// ===================== VIEWS =====================
 
-function handleSubjectSubmit(e) {
-    e.preventDefault();
-    const sData = {
-        name: document.getElementById('subjNameInput').value.trim() || 'Без названия',
-        color: document.getElementById('subjColorInput').value
-    };
+function renderTodayTabs() {
+    let html = `<div class="pb-10 space-y-4 pt-1">`;
+    const today = getTodayName();
 
-    if (state.editingSubjectId) {
-        const idx = state.subjects.findIndex(x => x.id === state.editingSubjectId);
-        if (idx !== -1) {
-            const oldName = state.subjects[idx].name;
-            if (oldName !== sData.name) {
-                Object.values(state.schedule).forEach(item => {
-                    if(item.subject === oldName) item.subject = sData.name;
+    if (state.subTab === 'schedule') {
+        html += `<div class="font-black italic text-slate-400 uppercase ml-1">Расписание на ${today}</div>`;
+        
+        let hasLessons = false;
+        TIMES.forEach(time => {
+            const items = state.schedule[today][time] || [];
+            if(items.length > 0) {
+                hasLessons = true;
+                items.forEach(item => {
+                    html += buildKanbanCard(item, time, today);
                 });
             }
-            state.subjects[idx] = { id: state.editingSubjectId, ...sData };
+        });
+        
+        if (!hasLessons) {
+            html += `<div class="text-center p-8 bg-white rounded-3xl border border-slate-100 text-slate-400 font-bold">На сегодня занятий нет</div>`;
         }
-    } else {
-        sData.id = 'SUBJ_' + Date.now();
-        state.subjects.push(sData);
+    } 
+    else if (state.subTab === 'plan') {
+         html += `<div class="font-black italic text-slate-400 uppercase ml-1">К оплате (План)</div>`;
+         // Выводим все неоплаченные занятия
+         let totalPlan = 0;
+         DAYS.forEach(day => {
+            TIMES.forEach(time => {
+                const items = state.schedule[day][time] || [];
+                items.forEach(it => {
+                    if(!it.isPaid) {
+                        const tInfo = state.teachers.find(t=>t.id===it.teacherId);
+                        const cost = tInfo ? tInfo.cost : 0;
+                        totalPlan += cost;
+                        html += buildPaymentRow(it, time, day, tInfo, cost, false);
+                    }
+                });
+            });
+         });
+         if(totalPlan === 0) html += `<div class="text-center p-8 text-slate-400 font-bold">Все оплачено</div>`;
+         
+         // Итого снизу
+         html += `<div class="fixed bottom-0 left-0 right-0 p-4 bg-white/95 backdrop-blur-md border-t border-slate-100 flex justify-between items-center text-lg z-40">
+                    <span class="font-black text-slate-400 italic">ИТОГО ПЛАН:</span>
+                    <span class="font-black text-rose-500 italic">${fmtNum(totalPlan)}</span>
+                  </div>`;
     }
-    
-    saveState();
-    document.getElementById('subjectEditModal').classList.remove('active');
-    renderSubjectsList();
-    renderSchedule();
-    populateSubjectSelect();
-}
-
-function handleDeleteSubject() {
-    if (!state.editingSubjectId) return;
-    if (confirm('Точно удалить этот предмет?')) {
-        state.subjects = state.subjects.filter(x => x.id !== state.editingSubjectId);
-        saveState();
-        document.getElementById('subjectEditModal').classList.remove('active');
-        renderSubjectsList();
-        renderSchedule();
-        populateSubjectSelect();
+    else if (state.subTab === 'fact') {
+         html += `<div class="font-black italic text-slate-400 uppercase ml-1">Оплачено (Факт)</div>`;
+         let totalFact = 0;
+         DAYS.forEach(day => {
+            TIMES.forEach(time => {
+                const items = state.schedule[day][time] || [];
+                items.forEach(it => {
+                    if(it.isPaid) {
+                        const tInfo = state.teachers.find(t=>t.id===it.teacherId);
+                        const cost = tInfo ? tInfo.cost : 0;
+                        totalFact += cost;
+                        html += buildPaymentRow(it, time, day, tInfo, cost, true);
+                    }
+                });
+            });
+         });
+         if(totalFact === 0) html += `<div class="text-center p-8 text-slate-400 font-bold">Пока оплат нет</div>`;
+         
+         // Итого снизу
+         html += `<div class="fixed bottom-0 left-0 right-0 p-4 bg-white/95 backdrop-blur-md border-t border-slate-100 flex justify-between items-center text-lg z-40">
+                    <span class="font-black text-slate-400 italic">ИТОГО ФАКТ:</span>
+                    <span class="font-black text-emerald-600 italic">${fmtNum(totalFact)}</span>
+                  </div>`;
     }
+
+    html += `</div>`;
+    return html;
 }
 
-function populateSubjectSelect() {
-    const sel = document.getElementById('subjectInput');
-    const currentVal = sel.value;
-    sel.innerHTML = '<option value="">— Выберите предмет —</option>';
+function renderWeekKanban() {
+    let html = `
+    <div class="kanban-container">
+        ${DAYS.map(day => {
+            let colHtml = `<div class="kanban-column bg-white rounded-[2rem] p-4 shadow-sm border border-slate-100 h-[80vh] overflow-y-auto">
+                              <div class="sticky top-0 bg-white/95 backdrop-blur-sm z-10 pb-3 mb-2 border-b border-slate-100 flex items-center gap-2">
+                                <div class="w-2.5 h-2.5 rounded-full bg-blue-500"></div>
+                                <span class="font-black text-lg text-slate-800">${day}</span>
+                              </div>
+                              <div class="space-y-3">
+            `;
+            
+            let count = 0;
+            TIMES.forEach(time => {
+                const items = state.schedule[day][time] || [];
+                items.forEach(it => {
+                    count++;
+                    colHtml += buildKanbanCard(it, time, day, true); // true = compact mode for week grid
+                });
+            });
+            if(count === 0) colHtml += `<div class="text-sm text-center text-slate-400 mt-4">Пусто</div>`;
+            
+            colHtml += `</div></div>`;
+            return colHtml;
+        }).join('')}
+    </div>`;
     
-    [...state.subjects].sort((a,b) => a.name.localeCompare(b.name)).forEach(s => {
-        const opt = document.createElement('option');
-        opt.value = s.name;
-        opt.textContent = s.name;
-        sel.appendChild(opt);
-    });
-    if(currentVal) sel.value = currentVal;
+    return html;
 }
 
-// =========================================
-// TEACHERS LOGIC
-// =========================================
-function renderTeachersList() {
-    const list = document.getElementById('sidebarTeachersList');
-    if(!list) return;
-    list.innerHTML = '';
+function renderAnalytics() {
+    // Collect stats
+    let totalLessons = 0;
+    let totalCost = 0;
+    let subjStats = {}; // {subjId: count}
     
-    const sortBy = document.getElementById('teacherSortBy').value;
-    
-    let sortedTeachers = [...state.teachers];
-    if (sortBy === 'name') sortedTeachers.sort((a,b) => a.name.localeCompare(b.name));
-    if (sortBy === 'price') sortedTeachers.sort((a,b) => Number(b.price || 0) - Number(a.price || 0));
-    
-    // группировка
-    if (sortBy === 'subject') {
-        const groups = {};
-        sortedTeachers.forEach(t => {
-            const sub = t.subjects ? t.subjects.split(',')[0].trim() : 'Другое';
-            if(!groups[sub]) groups[sub] = [];
-            groups[sub].push(t);
+    DAYS.forEach(d => TIMES.forEach(t => {
+        (state.schedule[d][t]||[]).forEach(it => {
+            totalLessons++;
+            const cost = state.teachers.find(x=>x.id===it.teacherId)?.cost || 0;
+            totalCost += cost;
+            subjStats[it.subjectId] = (subjStats[it.subjectId]||0) + 1;
         });
+    }));
+
+    let html = `
+    <div class="pb-20 space-y-4">
+        <div class="bg-indigo-600 text-white p-6 rounded-[2rem] shadow-lg bg-gradient-to-br from-indigo-500 to-purple-600">
+            <div class="text-indigo-100 font-bold mb-1 uppercase text-sm">Всего занятий</div>
+            <div class="text-4xl font-black mb-4">${totalLessons} <span class="text-lg font-medium opacity-70">шт.</span></div>
+            
+            <div class="text-indigo-100 font-bold mb-1 uppercase text-sm">Общий бюджет (План+Факт)</div>
+            <div class="text-3xl font-black">${fmtNum(totalCost)}</div>
+        </div>
         
-        Object.keys(groups).sort().forEach(sub => {
-            list.appendChild(createCell('teacher-group-header', sub));
-            groups[sub].forEach(t => list.appendChild(createTeacherCard(t)));
-        });
-    } else if (sortBy === 'status') {
-        const active = sortedTeachers.filter(t => t.status === 'active');
-        const temp = sortedTeachers.filter(t => t.status === 'temporary');
-        const inactive = sortedTeachers.filter(t => t.status === 'inactive');
-        
-        if(active.length) { list.appendChild(createCell('teacher-group-header', '✅ Активные')); active.forEach(t => list.appendChild(createTeacherCard(t))); }
-        if(temp.length) { list.appendChild(createCell('teacher-group-header', '⏸ Временно недоступны')); temp.forEach(t => list.appendChild(createTeacherCard(t))); }
-        if(inactive.length) { list.appendChild(createCell('teacher-group-header', '❌ Неактивные')); inactive.forEach(t => list.appendChild(createTeacherCard(t))); }
-    } else {
-        sortedTeachers.forEach(t => list.appendChild(createTeacherCard(t)));
-    }
-}
-
-function createTeacherCard(tInfo) {
-    const card = document.createElement('div');
-    card.className = `teacher-card ${tInfo.status !== 'active' ? 'teacher-inactive' : ''}`;
-    
-    let sBadge = tInfo.status === 'active' ? '<span class="status-badge status-active">Активен</span>' : 
-                 tInfo.status === 'inactive' ? '<span class="status-badge status-inactive">Неактивен</span>' : 
-                 '<span class="status-badge status-temporary">Пауза</span>';
-
-    let pLink = tInfo.platformLink || '#';
-    if (tInfo.platform === 'telegram' && pLink === '#' && tInfo.phone) {
-        pLink = `tg://resolve?phone=${tInfo.phone.replace(/[^0-9+]/g, '')}`;
-    }
-
-    // Platform icon row
-    let platformRowHtml = '';
-    if (tInfo.platform && PLATFORMS[tInfo.platform]) {
-        const p = PLATFORMS[tInfo.platform];
-        platformRowHtml = `
-            <div class="tc-platform-row">
-                <a href="${pLink}" target="_blank" class="tc-platform-icon" title="${p.name}" style="background:${p.color}22; border-color:${p.color}55;">${p.icon}</a>
-                <span class="tc-platform-label">${p.name}</span>
-            </div>`;
-    } else {
-        platformRowHtml = `<p style="color:var(--text-muted);font-size:11px;">💻 Платформа: —</p>`;
-    }
-
-    let bankName = tInfo.bank ? (document.querySelector(`#teacherBank option[value="${tInfo.bank}"]`)?.textContent || tInfo.bank) : '—';
-    let phoneHtml = tInfo.phone 
-        ? `<a href="tel:${tInfo.phone}" class="tc-phone-prominent">${tInfo.phone}</a>` 
-        : `<span style="color:var(--text-muted);font-size:12px;">— телефон не указан</span>`;
-    let nameText = tInfo.name.replace(/^Преп\.\s*/, '');
-
-    card.innerHTML = `
-        <div class="tc-header">
-            <span class="tc-name">${nameText}</span>
-            ${sBadge}
-        </div>
-        ${phoneHtml}
-        <div class="tc-body">
-            ${platformRowHtml}
-            <div class="tc-divider"></div>
-            <p>💳 Банк: ${bankName}</p>
-            <p>📚 Предметы: ${tInfo.subjects || '—'}</p>
-            <div class="teacher-price">💰 ${tInfo.price ? tInfo.price + ' ₽/урок' : 'Цена не указана'}</div>
-        </div>
-        <div class="tc-footer">
-            <button class="icon-only-btn" onclick="editTeacher('${tInfo.id}')" title="Изменить">✏️</button>
-        </div>
+        <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
+            <div class="font-black text-slate-800 mb-4 text-lg">По предметам</div>
+            <div class="space-y-4">
     `;
-    return card;
+    
+    const sortedSubjs = Object.entries(subjStats).sort((a,b)=>b[1]-a[1]);
+    sortedSubjs.forEach(([sId, count]) => {
+        const sInfo = state.subjects.find(x=>x.id===sId);
+        if(!sInfo) return;
+        const perc = Math.round((count / totalLessons) * 100);
+        html += `
+            <div>
+                <div class="flex justify-between text-sm font-bold text-slate-600 mb-1.5">
+                    <span>${sInfo.name}</span>
+                    <span>${count} шт. (${perc}%)</span>
+                </div>
+                <div class="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                    <div class="h-full rounded-full" style="width: ${perc}%; background-color: ${sInfo.color}"></div>
+                </div>
+            </div>
+        `;
+    });
+    
+    if(totalLessons === 0) html += `<div class="text-slate-400 text-center text-sm">Нет данных для аналитики</div>`;
+    
+    html += `</div></div></div>`;
+    return html;
 }
 
-window.editTeacher = function(id) {
-    const t = getTeacherById(id);
-    if (!t) return;
-    state.editingTeacherId = id;
+function renderSettings() {
+    return `<div class="text-center p-8 bg-white rounded-3xl border border-slate-100 text-slate-400 font-bold mt-4">Настройки скоро появятся</div>`;
+}
+
+// ===================== COMPONENTS =====================
+
+function buildKanbanCard(item, time, day, compact = false) {
+    const sInfo = state.subjects.find(s => s.id === item.subjectId);
+    const tInfo = state.teachers.find(t => t.id === item.teacherId);
+    if(!sInfo || !tInfo) return '';
+
+    const color = sInfo.color;
+    const bgOpacity = hexToRgba(color, 0.1);
     
-    document.getElementById('teacherEditTitle').textContent = `📝 Редактировать: ${t.name}`;
-    document.getElementById('editTeacherId').value = t.id;
+    // Actions context menu open handler
+    const params = `openActionModal('${day}','${time}','${item.id}')`;
+
+    return `
+    <div class="relative bg-white p-4 rounded-2xl border border-slate-200 shadow-[0_2px_8px_rgba(0,0,0,0.04)] mb-3 active:scale-[0.98] transition-all cursor-pointer" onclick="${params}">
+        <div class="flex items-center gap-2 mb-2">
+            <span class="px-2.5 py-1 text-[11px] font-black uppercase rounded-lg" style="background:${bgOpacity}; color:${color}">
+                ${sInfo.name}
+            </span>
+            <span class="ml-auto text-sm font-black text-slate-800 bg-slate-100 px-2 py-0.5 rounded-lg flex items-center gap-1.5">
+                <span class="text-slate-400">${ICONS.clock}</span> ${time}
+            </span>
+        </div>
+        
+        <div class="font-bold text-[15px] text-slate-700 leading-snug mb-2 line-clamp-2 pr-6">
+            ${tInfo.name}
+        </div>
+        
+        ${item.comment ? `
+            <div class="text-xs bg-amber-50 text-amber-600 p-2 rounded-xl mb-3 flex items-start gap-1.5 italic">
+                <div class="mt-0.5">${ICONS.comment}</div>
+                <span class="line-clamp-2">${item.comment}</span>
+            </div>
+        ` : ''}
+        
+        <div class="mt-2 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-slate-400">
+            <span>${item.duration} мин.</span>
+            <div class="flex gap-2.5">
+                ${tInfo.platform ? `<span class="flex items-center gap-1 text-blue-500">${ICONS.video} ${tInfo.platform}</span>` : ''}
+                ${tInfo.phone ? `<span class="flex items-center gap-1 text-emerald-500">${ICONS.phone} Виз.</span>` : ''}
+            </div>
+        </div>
+    </div>
+    `;
+}
+
+function buildPaymentRow(item, time, day, tInfo, cost, isFact) {
+    const sInfo = state.subjects.find(s=>s.id === item.subjectId);
+    const params = `openActionModal('${day}','${time}','${item.id}')`;
+    const leadColor = isFact ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600';
+    const sumColor = isFact ? 'text-emerald-600' : 'text-rose-600';
+
+    return `
+    <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm mb-3 flex justify-between items-center active:scale-[0.98] transition-all cursor-pointer" onclick="${params}">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 ${leadColor} rounded-xl flex items-center justify-center font-black text-sm">
+                ${day}
+            </div>
+            <div>
+                <div class="text-[10px] font-black uppercase text-slate-400 mb-0.5">${sInfo?.name || 'Предмет'} • ${time}</div>
+                <div class="font-bold text-slate-800 text-sm">${tInfo?.name || 'Преподаватель'}</div>
+            </div>
+        </div>
+        <div class="font-black ${sumColor} text-[15px] italic">
+            ${fmtNum(cost)}
+        </div>
+    </div>
+    `;
+}
+
+
+// ===================== ACTION MODAL =====================
+let currentActionContext = null;
+
+window.openActionModal = (day, time, itemId) => {
+    currentActionContext = { day, time, itemId };
+    const it = state.schedule[day][time].find(x => x.id === itemId);
+    const tInfo = state.teachers.find(t=>t.id===it.teacherId);
     
-    document.getElementById('teacherName').value = t.name || '';
-    document.getElementById('teacherPhone').value = t.phone || '';
-    document.getElementById('teacherEmail').value = t.email || '';
-    document.getElementById('teacherTelegram').value = t.telegram || '';
+    document.getElementById('modal-title').innerText = "Управление занятием";
     
-    document.getElementById('teacherPlatform').value = t.platform || '';
-    document.getElementById('teacherPlatformLink').value = t.platformLink || '';
+    let btns = ``;
     
-    document.getElementById('teacherBank').value = t.bank || '';
-    document.getElementById('teacherCard').value = t.cardNumber || '';
-    document.getElementById('teacherCardType').value = t.cardType || 'russian';
-    document.getElementById('teacherPrice').value = t.price || '';
-    
-    document.getElementById('teacherSubjects').value = t.subjects || '';
-    document.getElementById('teacherStatus').value = t.status || 'active';
-    document.getElementById('teacherWorkedBefore').checked = t.workedBefore || false;
-    
-    document.getElementById('deleteTeacherBtn').style.display = 'block';
-    document.getElementById('teacherEditModal').classList.add('active');
+    // Toggle Pay status
+    if (!it.isPaid) {
+        btns += `<button onclick="togglePayStatus(true)" class="w-full py-4 px-6 rounded-2xl border-2 border-emerald-500 text-emerald-600 font-bold flex items-center justify-center gap-2 active:bg-emerald-50">Отметить оплаченным</button>`;
+    } else {
+        btns += `<button onclick="togglePayStatus(false)" class="w-full py-4 px-6 rounded-2xl border-2 border-slate-300 text-slate-600 font-bold flex items-center justify-center gap-2 active:bg-slate-50">Убрать отметку оплаты</button>`;
+    }
+
+    if (tInfo && tInfo.phone) {
+        btns += `<a href="tel:${tInfo.phone}" class="w-full py-4 px-6 rounded-2xl border-2 border-slate-200 text-slate-700 font-bold flex items-center justify-center gap-2 active:bg-slate-50">${ICONS.phone} Позвонить</a>`;
+    }
+
+    document.getElementById('modal-buttons').innerHTML = btns;
+    document.getElementById('action-modal').classList.remove('hidden');
+    document.getElementById('action-modal').classList.add('flex');
 };
 
-function showAddTeacherForm() {
-    state.editingTeacherId = null;
-    document.getElementById('teacherForm').reset();
-    document.getElementById('teacherEditTitle').textContent = `➕ Новый преподаватель`;
-    document.getElementById('deleteTeacherBtn').style.display = 'none';
-    document.getElementById('teacherEditModal').classList.add('active');
-}
+window.closeModal = (id) => {
+    document.getElementById(id).classList.add('hidden');
+    document.getElementById(id).classList.remove('flex');
+    currentActionContext = null;
+};
 
-function handleTeacherSubmit(e) {
-    e.preventDefault();
-    
-    const tData = {
-        name: document.getElementById('teacherName').value.trim() || 'Без имени',
-        phone: document.getElementById('teacherPhone').value.trim(),
-        email: document.getElementById('teacherEmail').value.trim(),
-        telegram: document.getElementById('teacherTelegram').value.trim(),
-        platform: document.getElementById('teacherPlatform').value,
-        platformLink: document.getElementById('teacherPlatformLink').value.trim(),
-        bank: document.getElementById('teacherBank').value,
-        cardNumber: document.getElementById('teacherCard').value.trim(),
-        cardType: document.getElementById('teacherCardType').value,
-        price: document.getElementById('teacherPrice').value,
-        subjects: document.getElementById('teacherSubjects').value,
-        status: document.getElementById('teacherStatus').value,
-        workedBefore: document.getElementById('teacherWorkedBefore').checked
-    };
-
-    if (state.editingTeacherId) {
-        const idx = state.teachers.findIndex(t => t.id === state.editingTeacherId);
-        if (idx !== -1) state.teachers[idx] = { id: state.editingTeacherId, ...tData };
-    } else {
-        tData.id = 'T' + Date.now();
-        state.teachers.push(tData);
+window.togglePayStatus = (status) => {
+    if(!currentActionContext) return;
+    const { day, time, itemId } = currentActionContext;
+    const it = state.schedule[day][time].find(x => x.id === itemId);
+    if(it) {
+        it.isPaid = status;
+        saveData();
     }
-    
-    saveState();
-    document.getElementById('teacherEditModal').classList.remove('active');
-    renderTeachersList();
-    populateTeacherSelect(); // update create lesson modal
-}
-
-function handleDeleteTeacher() {
-    if (!state.editingTeacherId) return;
-    if (confirm('Точно удалить этого преподавателя? Это не удалит его из расписания, но он исчезнет из базы.')) {
-        state.teachers = state.teachers.filter(t => t.id !== state.editingTeacherId);
-        saveState();
-        document.getElementById('teacherEditModal').classList.remove('active');
-        renderTeachersList();
-        populateTeacherSelect();
-    }
-}
-
-function populateTeacherSelect() {
-    const sel = document.getElementById('teacherSelect');
-    sel.innerHTML = '<option value="">— Выберите из базы —</option>';
-    
-    // Сортировка по имени для удобства выбора
-    [...state.teachers].sort((a,b) => a.name.localeCompare(b.name)).forEach(t => {
-        const opt = document.createElement('option');
-        opt.value = t.id;
-        opt.textContent = `${t.name} (${t.subjects ? t.subjects.split(',')[0] : '...'})`;
-        sel.appendChild(opt);
-    });
-}
-
-// =========================================
-// DATA MANAGEMENT
-// =========================================
-function switchTab(isDraft) {
-    state.isDraft = isDraft;
-    document.getElementById('activeTab').classList.toggle('active', !isDraft);
-    document.getElementById('draftTab').classList.toggle('active', isDraft);
-    loadState();
-    renderSchedule();
-}
-
-const STORAGE_KEY_ACTIVE = 'schedule_active';
-const STORAGE_KEY_DRAFT = 'schedule_draft';
-const STORAGE_TEACHERS = 'teachers_v2';
-
-function loadState() {
-    const key = state.isDraft ? STORAGE_KEY_DRAFT : STORAGE_KEY_ACTIVE;
-    const saved = localStorage.getItem(key);
-    state.schedule = saved ? JSON.parse(saved) : {};
-    
-    const teachersSaved = localStorage.getItem(STORAGE_TEACHERS);
-    state.teachers = teachersSaved ? JSON.parse(teachersSaved) : [];
-
-    const subjSaved = localStorage.getItem('subjects_v2');
-    if (subjSaved) {
-        state.subjects = JSON.parse(subjSaved);
-    } else {
-        state.subjects = Object.keys(SUBJECT_COLORS).map((name, i) => ({
-            id: 'S_' + i, name: name, color: SUBJECT_COLORS[name].bg
-        }));
-        localStorage.setItem('subjects_v2', JSON.stringify(state.subjects));
-    }
-}
-
-function saveState() {
-    const key = state.isDraft ? STORAGE_KEY_DRAFT : STORAGE_KEY_ACTIVE;
-    localStorage.setItem(key, JSON.stringify(state.schedule));
-    localStorage.setItem(STORAGE_TEACHERS, JSON.stringify(state.teachers));
-    localStorage.setItem('subjects_v2', JSON.stringify(state.subjects));
-}
-
-// One-time migration: assign platforms to teachers who don’t have one
-function migratePlatforms() {
-    const platformKeys = ['teams', 'zoom', 'telegram', 'yandex', 'website'];
-    let changed = false;
-    state.teachers.forEach((t, i) => {
-        if (!t.platform) {
-            t.platform = platformKeys[i % platformKeys.length];
-            t.platformLink = t.platformLink || '#';
-            changed = true;
-        }
-    });
-    if (changed) {
-        localStorage.setItem(STORAGE_TEACHERS, JSON.stringify(state.teachers));
-    }
-}
-
-function loadSleepData() {
-    const saved = localStorage.getItem('sleepLogs');
-    state.sleepData = saved ? JSON.parse(saved) : {};
-}
-
-// Init
-initAuth();
-
-// --- EXCEL SEED LAYER ---
-(function seedExcelData() {
-    if (localStorage.getItem('excel_seeded_v1')) return;
-    
-    const tData = [
-        { phone: '968 439-84-36', subj: 'Английский' }, { phone: '966 077-10-48', subj: 'Скорочтение' }, { phone: '909 170-90-76', subj: 'Каллиграфия' }, { phone: '900 236-99-90', subj: 'Математика' }, { phone: '906 296-91-25', subj: 'Логопедия' }, { phone: '916 147-38-00', subj: 'Русский' }, { phone: '937 311-75-02', subj: 'Речь' }, { phone: '913 431-88-86', subj: 'Английский' }, { phone: '952 530-54-54', subj: 'Английский' }, { phone: '902 327-20-54', subj: 'Логопедия' }, { phone: '905 862-09-36', subj: 'Каллиграфия' }, { phone: '989 282-26-29', subj: 'Английский' }, { phone: '928 863-68-88', subj: 'Логопедия' }, { phone: '965 187-25-73', subj: 'Логопедия' }, { phone: '926 217-37-29', subj: 'Речь' }, { phone: '911 237-90-72', subj: 'Логопедия' }, { phone: '918 174-21-16', subj: 'Логопедия' }, { phone: '960 946-92-71', subj: 'Английский' }, { phone: '904 026-07-26', subj: 'Логопедия' }, { phone: '903 290-97-66', subj: 'Логопедия' }, { phone: '910 748-62-20', subj: 'Логопедия' }, { phone: '920 605-77-33', subj: 'Логопедия' }, { phone: '902 007-99-72', subj: 'Английский' }, { phone: '983 304-32-41', subj: 'Логопедия' }, { phone: '926 030-28-34', subj: 'Логопедия' }, { phone: '916 330-51-77', subj: 'Логопедия' }, { phone: '964 909-79-87', subj: 'Логопедия' }, { phone: '375 25 912 0406', subj: 'Логопедия' }, { phone: '906 075-89-66', subj: 'Дефектолог' }, { phone: '963 106-56-53', subj: 'Логопедия' }, { phone: '919 675-64-55', subj: 'Логопедия' }, { phone: '908 027-50-33', subj: 'Логопедия' }, { phone: '915 000-92-55', subj: 'Логопедия' }, { phone: '912 626-43-30', subj: 'Логопедия' }, { phone: '903 255-39-30', subj: 'Логопедия' }, { phone: '927 055-09-18', subj: 'Логопедия' }, { phone: '951 608-63-70', subj: 'Русский' }, { phone: '909 096-12-31', subj: 'Речь' }, { phone: '926 085-18-18', subj: 'Английский' }, { phone: '952 267-40-32', subj: 'Логопедия' }, { phone: '908 107-59-23', subj: 'Математика' }, { phone: '900 352-24-43', subj: 'Логопедия' }, { phone: '925 250-75-05', subj: 'Английский' }, { phone: '964 858-33-61', subj: 'Математика' }
-    ];
-    let tMap = {}; let tArr = []; let tId = 1;
-    tData.forEach(t => {
-        if(!tMap[t.phone]) {
-            let id = 'T_EXC_'+(tId++);
-            tMap[t.phone] = { id: id, name: 'Преп. ' + t.phone.slice(-5), phone: t.phone, subjects: t.subj, status: 'active' };
-            tArr.push(tMap[t.phone]);
-        } else if(!tMap[t.phone].subjects.includes(t.subj)) {
-            tMap[t.phone].subjects += ', ' + t.subj;
-        }
-    });
-
-    // Избегаем перезаписи учителей, если там уже кто-то есть от пользователя, 
-    // но в рамках задачи сказано "полностью заполнить нашим расписанием"
-    localStorage.setItem('teachers_v2', JSON.stringify(tArr));
-
-    // Assign random platforms to each teacher
-    const platformKeys = ['teams', 'zoom', 'telegram', 'yandex', 'website'];
-    tArr.forEach((t, i) => {
-        t.platform = platformKeys[i % platformKeys.length];
-        t.platformLink = '#';
-    });
-    localStorage.setItem('teachers_v2', JSON.stringify(tArr));
-
-    let sch = {}; let sId = 1;
-    function addBlocks(day, times, subj, dur, phone) {
-        let tid = phone && tMap[phone] ? tMap[phone].id : '';
-        let tname = phone ? phone : '';
-        times.forEach(tm => {
-            let id = 'S_EXC_'+(sId++);
-            sch[id] = { id, day, time: tm, subject: subj, duration: String(dur), teacherId: tid, teacherName: tname, color: '#0984e3' };
-        });
-    }
-
-    addBlocks('Пн', ['08:00'], 'Английский', 60, '968 439-84-36');
-    addBlocks('Пн', ['09:00'], 'Скорочтение', 60, '966 077-10-48');
-    addBlocks('Пн', ['10:00'], 'Каллиграфия', 40, '909 170-90-76');
-    addBlocks('Пн', ['11:00'], 'Математика', 60, '900 236-99-90');
-    addBlocks('Пн', ['12:00'], 'Логопедия', 45, '906 296-91-25');
-    addBlocks('Пн', ['14:00'], 'Русский', 60, '916 147-38-00');
-    addBlocks('Пн', ['15:00'], 'Речь', 60, '937 311-75-02');
-    addBlocks('Пн', ['16:00'], 'Айкидо', 180, null);
-    addBlocks('Пн', ['19:00'], 'Английский', 60, '913 431-88-86');
-
-    addBlocks('Вт', ['08:00'], 'Английский', 60, '952 530-54-54');
-    addBlocks('Вт', ['09:00'], 'Логопедия', 45, '902 327-20-54');
-    addBlocks('Вт', ['10:00'], 'Каллиграфия', 40, '905 862-09-36');
-    addBlocks('Вт', ['11:00'], 'Английский', 60, '989 282-26-29');
-    addBlocks('Вт', ['12:00'], 'Логопедия', 40, '928 863-68-88');
-    addBlocks('Вт', ['14:00'], 'Логопедия', 45, '965 187-25-73');
-    addBlocks('Вт', ['15:00'], 'Речь', 60, '926 217-37-29');
-    addBlocks('Вт', ['16:00'], 'Баскетбол', 180, null);
-
-    addBlocks('Ср', ['09:00'], 'Логопедия', 45, '911 237-90-72');
-    addBlocks('Ср', ['10:00'], 'Логопедия', 60, '918 174-21-16');
-    addBlocks('Ср', ['11:00'], 'Английский', 60, '960 946-92-71');
-    addBlocks('Ср', ['12:00'], 'Логопедия', 50, '904 026-07-26');
-    addBlocks('Ср', ['14:00'], 'Логопедия', 30, '903 290-97-66');
-    addBlocks('Ср', ['15:00'], 'Логопедия', 45, '910 748-62-20');
-    addBlocks('Ср', ['16:00'], 'Логопедия', 45, '920 605-77-33');
-
-    addBlocks('Чт', ['09:00'], 'Английский', 60, '902 007-99-72');
-    addBlocks('Чт', ['10:00'], 'Логопедия', 45, '983 304-32-41');
-    addBlocks('Чт', ['11:00'], 'Логопедия', 45, '926 030-28-34');
-    addBlocks('Чт', ['12:00'], 'Математика', 60, '966 077-10-48');
-    addBlocks('Чт', ['14:00'], 'Логопедия', 40, '916 330-51-77');
-    addBlocks('Чт', ['15:00'], 'Логопедия', 40, '964 909-79-87');
-    addBlocks('Чт', ['17:00'], 'Баскетбол', 120, null);
-
-    addBlocks('Пт', ['09:00'], 'Логопедия', 60, '375 25 912 0406');
-    addBlocks('Пт', ['10:00'], 'Дефектолог', 60, '906 075-89-66');
-    addBlocks('Пт', ['11:00'], 'Логопедия', 45, '963 106-56-53');
-    addBlocks('Пт', ['12:00'], 'Логопедия', 45, '919 675-64-55');
-    addBlocks('Пт', ['14:00'], 'Логопедия', 30, '908 027-50-33');
-    addBlocks('Пт', ['15:00'], 'Логопедия', 45, '915 000-92-55');
-    addBlocks('Пт', ['16:00'], 'Волейбол', 90, null);
-
-    addBlocks('Сб', ['08:00'], 'Логопедия', 30, '912 626-43-30');
-    addBlocks('Сб', ['09:00'], 'Айкидо', 120, null);
-    addBlocks('Сб', ['13:00'], 'Логопедия', 60, '903 255-39-30');
-    addBlocks('Сб', ['14:00'], 'Логопедия', 60, '927 055-09-18');
-    addBlocks('Сб', ['15:00'], 'Русский', 60, '951 608-63-70');
-    addBlocks('Сб', ['16:00'], 'Шахматы', 120, null);
-    addBlocks('Сб', ['18:00'], 'Речь', 60, '909 096-12-31');
-
-    addBlocks('Вс', ['09:00'], 'Английский', 60, '926 085-18-18');
-    addBlocks('Вс', ['10:00'], 'Логопедия', 60, '952 267-40-32');
-    addBlocks('Вс', ['11:00'], 'Математика', 60, '908 107-59-23');
-    addBlocks('Вс', ['12:00'], 'Логопедия', 60, '900 352-24-43');
-    addBlocks('Вс', ['14:00'], 'Английский', 60, '925 250-75-05');
-    addBlocks('Вс', ['15:00'], 'Математика', 60, '964 858-33-61');
-    addBlocks('Вс', ['17:00'], 'Барабаны', 180, null);
-
-    localStorage.setItem('schedule_active', JSON.stringify(sch));
-    localStorage.setItem('excel_seeded_v1', 'true');
-    location.reload();
-})();
+    closeModal('action-modal');
+};

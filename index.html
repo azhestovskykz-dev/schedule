@@ -2,315 +2,70 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Интерактивное Расписание</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=17">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Расписание PRO</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- GFonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
 </head>
-<body>
-    <!-- Экран Авторизации -->
-    <div id="loginOverlay" class="login-overlay active">
-        <div class="login-box">
-            <h2>🔐 Привет! Кто ты?</h2>
-            <form id="loginForm">
-                <div class="form-group">
-                    <label for="username">Имя пользователя:</label>
-                    <select id="username" required>
-                        <option value="">— Выбери имя —</option>
-                        <option value="admin">Андрей (Админ)</option>
-                        <option value="user">Никита (Только просмотр)</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="password">Пароль:</label>
-                    <input type="password" id="password" required placeholder="Введите пароль">
-                </div>
-                <button type="submit" class="primary-btn w-100">Войти</button>
-                <div id="loginError" class="login-error">Неверный пароль!</div>
-            </form>
-        </div>
-    </div>
+<body class="bg-[#f8fafc] text-[#1e293b] min-h-screen relative font-sans antialiased overflow-x-hidden">
 
-    <div id="app" style="display: none;">
-        <header>
-            <div class="logo">📅 Мое Расписание <span id="currentUserDisplay" class="user-badge"></span></div>
-            <div class="header-controls">
-                <div class="version-tabs" id="versionTabs">
-                    <button id="activeTab" class="tab-btn active">Текущее</button>
-                    <button id="draftTab" class="tab-btn">Черновик</button>
-                </div>
-                <button id="themeToggleBtn" class="tab-btn" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color); border-radius: 8px; padding: 6px 12px; font-size: 16px !important;" title="Переключить тему">🌞</button>
-                <div class="mode-toggle" id="editModeToggleGroup">
-                    <label class="switch">
-                        <input type="checkbox" id="modeToggle" checked>
-                        <span class="slider round"></span>
-                    </label>
-                    <span id="modeLabel">Редактирование</span>
-                </div>
-                <div class="header-actions">
-                    <button id="mobileSubjectsBtn" class="primary-btn mobile-only">📚</button>
-                    <button id="mobileTeachersBtn" class="primary-btn mobile-only">👩‍🏫</button>
-                    <button id="logSleepBtn" class="secondary-btn">😴 Сон</button>
-                    <button id="logoutBtn" class="danger-btn">🚪 Выйти</button>
-                </div>
+<div id="app" class="max-w-md mx-auto min-h-screen relative pb-20 ios-bottom">
+    
+    <!-- TOP NAVIGATION -->
+    <div class="sticky top-0 bg-[#f8fafc]/95 backdrop-blur-md z-50 border-b border-slate-200">
+        <nav class="flex overflow-x-auto whitespace-nowrap scrollbar-hide">
+            <div class="flex gap-2 p-3 min-w-max">
+                <button onclick="setMainTab('today')" id="main-tab-today" class="nav-btn t-today-active font-bold">Сегодня</button>
+                <button onclick="setMainTab('week')" id="main-tab-week" class="nav-btn t-week-inactive font-bold">Неделя</button>
+                <button onclick="setMainTab('analytics')" id="main-tab-analytics" class="nav-btn t-analytics-inactive font-bold">Аналитика</button>
+                <!-- Settings Button (optional) -->
+                <button onclick="setMainTab('settings')" id="main-tab-settings" class="nav-btn-icon text-slate-400 hover:text-slate-800 transition-colors flex items-center justify-center p-3 rounded-xl border border-transparent">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-2.82 1.18V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-2.82-1.18l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9"/>
+                    </svg>
+                </button>
             </div>
-        </header>
-
-        <div class="main-layout">
-            <!-- Левый сайдбар: Предметы -->
-            <aside class="sidebar left-sidebar" id="sidebarLeft">
-                <div class="sidebar-header">
-                    <h2>📚 Предметы</h2>
-                    <button type="button" id="addSubjectBtn" class="primary-btn sm-btn">➕</button>
-                </div>
-                <div id="sidebarSubjectsList" class="sidebar-list"></div>
-            </aside>
-
-            <!-- По центру: Расписание -->
-            <main class="main-content">
-                <div id="mobileDayTabs" class="mobile-day-tabs"></div>
-                <div class="schedule-wrapper">
-                    <div id="scheduleGrid" class="schedule-grid"></div>
-                </div>
-                
-                <section class="analytics-section">
-                    <div class="analytics-header">
-                        <h2>📊 Аналитика</h2>
-                        <button id="toggleAnalyticsBtn" class="analytics-toggle-btn">▾ Открыть</button>
-                    </div>
-                    <div id="analyticsBody" style="display: none;">
-                        <div class="global-stats" id="globalStatsArea">
-                            <div class="stat-card main">
-                                <span class="stat-label">Всего учебы</span>
-                                <span id="studyTimeText" class="stat-value">0 ч</span>
-                            </div>
-                            <div class="stat-card main rest">
-                                <span class="stat-label">Свободное время</span>
-                                <span id="restTimeText" class="stat-value">0 ч</span>
-                            </div>
-                        </div>
-                        <div id="subjectBreakdownArea" class="subject-breakdown"></div>
-                    </div>
-                </section>
-            </main>
-
-            <!-- Правый сайдбар: Преподаватели -->
-            <aside class="sidebar right-sidebar" id="sidebarRight">
-                <div class="sidebar-header">
-                    <h2>👩‍🏫 Преподаватели</h2>
-                    <button type="button" id="addTeacherBtn" class="primary-btn sm-btn">➕</button>
-                </div>
-                <div class="sidebar-toolbar">
-                    <select id="teacherSortBy">
-                        <option value="subject">По предмету</option>
-                        <option value="price">По стоимости</option>
-                        <option value="status">По статусу</option>
-                        <option value="name">По Имени</option>
-                    </select>
-                </div>
-                <div id="sidebarTeachersList" class="sidebar-list"></div>
-            </aside>
-        </div>
-
-    <!-- Модальное окно редактирования занятия -->
-    <div id="modalOverlay" class="modal-overlay">
-        <div class="modal-content">
-            <h2 id="modalTitle">Занятие</h2>
-            <form id="scheduleForm">
-                <input type="hidden" id="editId">
-                <div class="form-group">
-                    <label for="subjectInput">📚 Предмет:</label>
-                    <select id="subjectInput" required>
-                        <option value="">— Выберите предмет —</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="teacherSelect">👩‍🏫 Преподаватель:</label>
-                    <select id="teacherSelect">
-                        <option value="">— Выберите или введите ниже —</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="phoneInput">📞 Телефон / Контакт:</label>
-                    <input type="text" id="phoneInput">
-                </div>
-                <div class="form-group">
-                    <label for="durationInput">⏱ Длительность (мин):</label>
-                    <input type="number" id="durationInput" value="60">
-                </div>
-                <div class="form-group">
-                    <label for="colorInput">🎨 Цвет блока:</label>
-                    <input type="color" id="colorInput" value="#0984e3">
-                </div>
-                <div class="modal-actions">
-                    <button type="button" id="closeModalBtn" class="secondary-btn">Отмена</button>
-                    <button type="submit" class="primary-btn">💾 Сохранить</button>
-                </div>
-            </form>
+        </nav>
+        
+        <!-- SUB-NAVIGATION FOR "TODAY" TAB -->
+        <div id="sub-nav-today" class="px-3 pb-3 hidden">
+            <div class="bg-slate-100 p-1 rounded-2xl flex">
+                <button onclick="setSubTab('schedule')" id="sub-tab-schedule" class="flex-1 py-2 px-2 text-center text-sm font-bold rounded-xl transition-all shadow-sm bg-white text-emerald-600">Расписание</button>
+                <button onclick="setSubTab('plan')" id="sub-tab-plan" class="flex-1 py-2 px-2 text-center text-sm font-bold rounded-xl transition-all text-slate-500 hover:text-slate-800">План / Оплата</button>
+                <button onclick="setSubTab('fact')" id="sub-tab-fact" class="flex-1 py-2 px-2 text-center text-sm font-bold rounded-xl transition-all text-slate-500 hover:text-slate-800">Факт</button>
+            </div>
         </div>
     </div>
 
+    <!-- MAIN CONTENT AREA -->
+    <div id="content-area" class="pt-2 px-3">
+        <!-- JS renders content here -->
+    </div>
 
-
-    <!-- Карточка редактирования предмета -->
-    <div id="subjectEditModal" class="modal-overlay">
-        <div class="modal-content">
-            <h2 id="subjectEditTitle">📝 Редактировать предмет</h2>
-            <form id="subjectForm">
-                <input type="hidden" id="editSubjectId">
-                <div class="form-group">
-                    <label for="subjNameInput">Название предмета:</label>
-                    <input type="text" id="subjNameInput" required placeholder="Например: Логопедия">
-                </div>
-                <div class="form-group">
-                    <label for="subjColorInput">Цвет (окантовка):</label>
-                    <input type="color" id="subjColorInput" value="#0984e3">
-                </div>
-                <div class="modal-actions">
-                    <button type="button" id="deleteSubjectBtn" class="danger-btn">🗑 Удалить</button>
-                    <button type="button" id="cancelSubjectEdit" class="secondary-btn">Отмена</button>
-                    <button type="submit" class="primary-btn">💾 Сохранить</button>
-                </div>
-            </form>
+    <!-- MODALS AREA -->
+    <!-- Action Modal -->
+    <div id="action-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-[100] px-4">
+        <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div id="modal-title" class="mb-6 text-center text-emerald-600 font-extrabold uppercase text-lg">Действие</div>
+            
+            <div id="modal-buttons" class="space-y-3">
+                <!-- Buttons injected via JS -->
+            </div>
+            
+            <button onclick="closeModal('action-modal')" class="w-full mt-4 py-4 px-6 rounded-2xl border-2 border-slate-200 text-slate-500 font-bold flex items-center justify-center gap-3 transition-opacity active:opacity-70">
+                Отмена
+            </button>
         </div>
     </div>
 
+</div>
 
+<!-- DATA SCRIPT -->
+<script src="app.js"></script>
 
-    <!-- Карточка редактирования преподавателя -->
-    <div id="teacherEditModal" class="modal-overlay">
-        <div class="modal-content wide">
-            <h2 id="teacherEditTitle">📋 Карточка преподавателя</h2>
-            <form id="teacherForm">
-                <input type="hidden" id="editTeacherId">
-
-                <fieldset class="form-section">
-                    <legend>👤 Личные данные</legend>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="teacherName">ФИО:</label>
-                            <input type="text" id="teacherName" placeholder="Иванова Мария Алексеевна">
-                        </div>
-                        <div class="form-group">
-                            <label for="teacherPhone">📞 Телефон:</label>
-                            <input type="text" id="teacherPhone" placeholder="900 000-00-00">
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="teacherEmail">📧 Email:</label>
-                            <input type="email" id="teacherEmail" placeholder="teacher@mail.ru">
-                        </div>
-                        <div class="form-group">
-                            <label for="teacherTelegram">✈️ Telegram:</label>
-                            <input type="text" id="teacherTelegram" placeholder="@username">
-                        </div>
-                    </div>
-                </fieldset>
-
-                <fieldset class="form-section">
-                    <legend>🖥 Платформа для занятий</legend>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="teacherPlatform">Тип:</label>
-                            <select id="teacherPlatform">
-                                <option value="">— Не указано —</option>
-                                <option value="teams">Microsoft Teams</option>
-                                <option value="zoom">Zoom</option>
-                                <option value="telegram">Telegram</option>
-                                <option value="yandex">Яндекс Телемост</option>                                <option value="skype">Skype</option>
-                                <option value="website">Сайт / Площадка</option>
-                                <option value="offline">Очно</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="teacherPlatformLink">🔗 Ссылка:</label>
-                            <input type="text" id="teacherPlatformLink" placeholder="https://...">
-                        </div>
-                    </div>
-                </fieldset>
-
-                <fieldset class="form-section">
-                    <legend>💳 Оплата</legend>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="teacherBank">Банк:</label>
-                            <select id="teacherBank">
-                                <option value="">— Не указан —</option>
-                                <option value="sber">Сбербанк</option>
-                                <option value="alfa">Альфа-Банк</option>
-                                <option value="vtb">ВТБ</option>
-                                <option value="tinkoff">Тинькофф</option>
-                                <option value="raiffeisen">Райффайзен</option>
-                                <option value="foreign">Зарубежный банк</option>
-                                <option value="other">Другой</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="teacherCard">💳 Номер карты:</label>
-                            <input type="text" id="teacherCard" placeholder="0000 0000 0000 0000">
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="teacherCardType">Тип карты:</label>
-                            <select id="teacherCardType">
-                                <option value="russian">Российская</option>
-                                <option value="foreign">Зарубежная</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="teacherPrice">💰 Цена за урок (₽):</label>
-                            <input type="number" id="teacherPrice" placeholder="2000">
-                        </div>
-                    </div>
-                </fieldset>
-
-                <fieldset class="form-section">
-                    <legend>📚 Предметы и статус</legend>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="teacherSubjects">Предметы:</label>
-                            <input type="text" id="teacherSubjects" placeholder="Логопедия, Речь">
-                        </div>
-                        <div class="form-group">
-                            <label for="teacherStatus">Статус:</label>
-                            <select id="teacherStatus">
-                                <option value="active">✅ Активен</option>
-                                <option value="inactive">❌ Неактивен</option>
-                                <option value="temporary">⏸ Временно недоступен</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="teacherWorkedBefore">
-                            Занимались ранее
-                        </label>
-                    </div>
-                </fieldset>
-
-                <div class="modal-actions">
-                    <button type="button" id="deleteTeacherBtn" class="danger-btn">🗑 Удалить</button>
-                    <button type="button" id="cancelTeacherEdit" class="secondary-btn">Отмена</button>
-                    <button type="submit" class="primary-btn">💾 Сохранить</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Контекстное меню (ПКМ) -->
-    <div id="contextMenu" class="context-menu">
-        <a href="#" id="cmCall" class="menu-item"><i>📞</i> Позвонить</a>
-        <a href="#" id="cmWrite" class="menu-item" target="_blank"><i>💬</i> Написать (Telegram)</a>
-        <div class="context-menu-divider"></div>
-        <div id="cmComment" class="menu-item"><i>💬</i> Комментарий</div>
-        <div id="cmEdit" class="menu-item"><i>📝</i> Редактировать</div>
-        <div id="cmDelete" class="menu-item danger"><i>🗑</i> Удалить</div>
-    </div>
-
-    <script src="app.js?v=17"></script>
 </body>
 </html>
