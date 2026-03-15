@@ -20,7 +20,7 @@ function renderSchedule() {
 }
 
 function renderViewOptions() {
-    let count = state.scheduleTab === 'today' ? 18 : state.scheduleTab === 'week' ? 22 : state.scheduleTab === 'week2' ? 5 : 5;
+    let count = state.scheduleTab === 'today' ? 18 : state.scheduleTab === 'week' ? 23 : state.scheduleTab === 'week2' ? 5 : 5;
     
     let ht = '';
     for(let i=1; i<=count; i++) {
@@ -338,7 +338,7 @@ function renderWeek2View() {
 function renderWeekView() {
     if (state.scheduleView === 1) return viewWeek1_Kanban();
     if (state.scheduleView === 2) return viewWeek2_KanbanEdit();
-    if (state.scheduleView === 3) return viewWeek3_NewCards();
+    if (state.scheduleView === 3) return viewWeek3_CompactGrid();
     if (state.scheduleView === 4) return viewWeek4_Timeline();
     if (state.scheduleView === 5) return viewWeek5_CompactTable();
     if (state.scheduleView === 6) return viewWeek6_Masonry();
@@ -358,6 +358,7 @@ function renderWeekView() {
     if (state.scheduleView === 20) return viewWeek20_UniBorderBottom();
     if (state.scheduleView === 21) return viewWeek21_UniMinimalist();
     if (state.scheduleView === 22) return viewWeek22_KanbanFull();
+    if (state.scheduleView === 23) return viewWeek23_NewCards();
     return '';
 }
 
@@ -439,6 +440,90 @@ function viewWeek2_KanbanEdit() {
         if (items.length === 0) ht += `<div class="text-slate-400 text-sm italic text-center py-4">Выходной</div>`;
         items.forEach(it => ht += buildKanbanCardEdit(it, day));
         
+        ht += `</div></div>`;
+    });
+    ht += `</div>`;
+    return ht;
+}
+
+// --- V3: Compact 7-Day Grid (modified copy of V2) ---
+function buildKanbanCardCompact(item, day) {
+    const subj = state.subjects.find(s=>s.id===item.subjectId);
+    const teacher = state.teachers.find(t=>t.id===item.teacherId);
+    if(!subj) return '';
+
+    let numbers = '';
+    if (teacher && teacher.phone) {
+        numbers = teacher.phone.slice(-5);
+    } else if (teacher && teacher.name) {
+        let m = teacher.name.match(/\((.*?)\)/);
+        if (m) numbers = m[1];
+    }
+    if (!numbers) numbers = '00-00';
+
+    let isZoom = teacher && teacher.platform && teacher.platform.toLowerCase() === 'zoom';
+    let platformName = isZoom ? 'Zoom' : 'Telegram';
+    let platColor = isZoom ? 'text-blue-500' : 'text-sky-500';
+    let platBg = isZoom ? 'bg-blue-50' : 'bg-sky-50';
+    let platHover = isZoom ? 'hover:bg-blue-100' : 'hover:bg-sky-100';
+    
+    let iconSvg = isZoom 
+        ? `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7l-7 5 7 5V7z"></path><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>`
+        : `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>`;
+
+    return `<div class="bg-white p-2.5 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+        <div class="flex justify-between items-center mb-1.5">
+            <span class="px-2 py-0.5 text-[9px] font-black uppercase rounded-lg text-white shadow-sm" style="background:${subj.color}">${subj.name.slice(0,8)}</span>
+            <span class="text-sm font-black text-slate-800">${numbers}</span>
+        </div>
+        <div class="text-center font-black text-sm text-slate-500 mb-1.5">${item.duration} \u043c\u0438\u043d.</div>
+        <button onclick="alert('\u041e\u0442\u043a\u0440\u044b\u0442\u0438\u0435 ${platformName}')" class="w-full flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg font-bold text-[11px] ${platColor} ${platBg} ${platHover} transition-colors">
+            ${iconSvg}
+            <span>${platformName}</span>
+        </button>
+    </div>`;
+}
+
+function viewWeek3_CompactGrid() {
+    let ht = `<div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2 pb-4">`;
+    DAYS.forEach(day => {
+        ht += `<div class="bg-slate-50 rounded-2xl p-2 border border-slate-100">
+            <div class="text-center font-black text-sm text-slate-600 mb-2 uppercase tracking-widest">${day}</div>
+            <div class="space-y-2">`;
+        
+        let items = [];
+        TIMES.forEach(t => {
+            (state.schedule[day][t] || []).forEach(it => items.push({time: t, ...it}));
+        });
+        
+        if (items.length === 0) ht += `<div class="text-slate-400 text-xs italic text-center py-3">\u0412\u044b\u0445\u043e\u0434\u043d\u043e\u0439</div>`;
+        items.forEach(it => ht += buildKanbanCardCompact(it, day));
+        
+        ht += `</div></div>`;
+    });
+    ht += `</div>`;
+    return ht;
+}
+
+// --- V23: Old NewCards (formerly V3) ---
+function viewWeek23_NewCards() {
+    let ht = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-3 pb-6">`;
+    DAYS.forEach(day => {
+        ht += `<div class="bg-slate-50 rounded-2xl p-2 border border-slate-100">
+            <div class="text-center font-black text-sm text-slate-500 mb-2 uppercase tracking-widest">${day}</div>
+            <div class="space-y-2">`;
+        let items = [];
+        TIMES.forEach(t => { (state.schedule[day][t] || []).forEach(it => items.push({time: t, ...it})); });
+        items.forEach(it => {
+            const s = state.subjects.find(x=>x.id===it.subjectId);
+            ht += `<div class="bg-white p-2 rounded-xl border border-slate-100 shadow-sm">
+                <div class="flex justify-between items-center mb-1">
+                    <span class="px-1.5 py-0.5 rounded text-[8px] uppercase font-black text-white" style="background:${s?.color||'#ccc'}">${s?.name.slice(0,6)}</span>
+                    <span class="text-[10px] font-bold text-slate-400">${it.time}</span>
+                </div>
+                <div class="text-[10px] font-bold text-slate-500">${it.duration}\u043c</div>
+            </div>`;
+        });
         ht += `</div></div>`;
     });
     ht += `</div>`;
