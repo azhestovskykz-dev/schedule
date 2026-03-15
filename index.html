@@ -9,71 +9,52 @@
     <!-- GFonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <style>
+        .nav-btn {
+            padding: 10px 18px;
+            border-radius: 12px;
+            text-align: center;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 100px;
+        }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
 </head>
 <body class="bg-[#f8fafc] text-[#1e293b] min-h-screen relative font-sans antialiased overflow-x-hidden">
 
 <div id="app" class="w-full min-h-screen relative pb-20 ios-bottom">
     
-    <!-- TOP NAVIGATION -->
-    <div class="sticky top-0 bg-[#f8fafc]/95 backdrop-blur-md z-50 border-b border-slate-200">
-        <nav class="flex overflow-x-auto whitespace-nowrap scrollbar-hide max-w-7xl mx-auto px-2">
-            <div class="flex gap-2 p-3 min-w-max mx-auto md:mx-0">
-                <button onclick="setMainTab('today')" id="main-tab-today" class="nav-btn t-today-active font-bold">Сегодня</button>
-                <button onclick="setMainTab('week')" id="main-tab-week" class="nav-btn t-week-inactive font-bold">Неделя</button>
-                <button onclick="setMainTab('week2')" id="main-tab-week2" class="nav-btn t-week2-inactive font-bold">Неделя-2</button>
-                <button onclick="setMainTab('week3')" id="main-tab-week3" class="nav-btn t-week3-inactive font-bold">Неделя-3</button>
-                <button onclick="setMainTab('analytics')" id="main-tab-analytics" class="nav-btn t-analytics-inactive font-bold">Аналитика</button>
-                
-                <!-- EXTERNAL APPS AS TABS -->
-                <div class="w-px h-6 bg-slate-300 mx-1 self-center"></div>
-                <button onclick="setMainTab('site1')" id="main-tab-site1" class="nav-btn t-site1-inactive font-bold">Аренда</button>
-                <button onclick="setMainTab('site2')" id="main-tab-site2" class="nav-btn t-site2-inactive font-bold">Достигатор</button>
-                <button onclick="setMainTab('site4')" id="main-tab-site4" class="nav-btn t-site4-inactive font-bold">Гностика</button>
-
-                <!-- Settings Button (optional) -->
-                <button onclick="setMainTab('settings')" id="main-tab-settings" class="nav-btn-icon text-slate-400 hover:text-slate-800 transition-colors flex items-center justify-center p-3 rounded-xl border border-transparent">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="3"/>
-                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-2.82 1.18V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-2.82-1.18l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9"/>
-                    </svg>
-                </button>
-            </div>
+    <!-- TOP NAVIGATION (LEVEL 1) -->
+    <div class="sticky top-0 bg-[#f8fafc]/95 backdrop-blur-md z-50 border-b border-slate-200 pt-3 pb-3">
+        <nav class="flex overflow-x-auto whitespace-nowrap scrollbar-hide px-3 gap-2 max-w-7xl mx-auto">
+            <button id="nav-schedule" onclick="setSection('schedule')" class="nav-btn">Расписание</button>
+            <button id="nav-tasks" onclick="setSection('tasks')" class="nav-btn">Задачи</button>
+            <button id="nav-analytics" onclick="setSection('analytics')" class="nav-btn">Аналитика</button>
+            <button id="nav-finance" onclick="setSection('finance')" class="nav-btn">Финансы</button>
+            <button id="nav-subjects" onclick="setSection('subjects')" class="nav-btn">Предметы</button>
+            <button id="nav-teachers" onclick="setSection('teachers')" class="nav-btn">Преподаватели</button>
         </nav>
-        
-        <!-- SUB-NAVIGATION FOR "TODAY" TAB -->
-        <div id="sub-nav-today" class="px-3 pb-3 hidden max-w-xl mx-auto w-full">
-            <div class="bg-slate-100 p-1 rounded-2xl flex">
-                <button onclick="setSubTab('schedule')" id="sub-tab-schedule" class="flex-1 py-2 px-2 text-center text-sm font-bold rounded-xl transition-all shadow-sm bg-white text-emerald-600">Расписание</button>
-                <button onclick="setSubTab('plan')" id="sub-tab-plan" class="flex-1 py-2 px-2 text-center text-sm font-bold rounded-xl transition-all text-slate-500 hover:text-slate-800">План / Оплата</button>
-                <button onclick="setSubTab('fact')" id="sub-tab-fact" class="flex-1 py-2 px-2 text-center text-sm font-bold rounded-xl transition-all text-slate-500 hover:text-slate-800">Факт</button>
-            </div>
-        </div>
     </div>
 
     <!-- MAIN CONTENT AREA -->
-    <div id="content-area" class="pt-2 px-3">
-        <!-- JS renders content here -->
-    </div>
-
-    <!-- MODALS AREA -->
-    <!-- Action Modal -->
-    <div id="action-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-[100] px-4">
-        <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
-            <div id="modal-title" class="mb-6 text-center text-emerald-600 font-extrabold uppercase text-lg">Действие</div>
-            
-            <div id="modal-buttons" class="space-y-3">
-                <!-- Buttons injected via JS -->
-            </div>
-            
-            <button onclick="closeModal('action-modal')" class="w-full mt-4 py-4 px-6 rounded-2xl border-2 border-slate-200 text-slate-500 font-bold flex items-center justify-center gap-3 transition-opacity active:opacity-70">
-                Отмена
-            </button>
-        </div>
+    <div id="content-area" class="pt-4 px-3 max-w-7xl mx-auto">
+        <!-- JS renders active section here -->
     </div>
 
 </div>
 
-<!-- DATA SCRIPT -->
+<!-- MODULAR SCRIPTS -->
+<script src="data.js"></script>
+<script src="schedule.js"></script>
+<script src="tasks.js"></script>
+<script src="analytics.js"></script>
+<script src="finance.js"></script>
+<script src="subjects.js"></script>
+<script src="teachers.js"></script>
 <script src="app.js"></script>
 
 </body>
