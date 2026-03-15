@@ -1,4 +1,4 @@
-// ===================== ANALYTICS MODULE =====================
+﻿// ===================== ANALYTICS MODULE =====================
 
 function renderAnalytics() {
     let ht = `
@@ -6,11 +6,11 @@ function renderAnalytics() {
             ${[1,2,3,4,5].map(i => {
                 let active = state.analyticsView === i;
                 let labels = ['1: Круговая (Предметы)', '2: Бары (По дням)', '3: Преподаватели', '4: Финансовая', '5: Общая сводка'];
-                return \`<button onclick="state.analyticsView=${i}; render();" class="px-5 py-2.5 rounded-2xl text-[14px] font-black shadow-sm transition-all whitespace-nowrap ${active ? 'bg-purple-500 text-white' : 'bg-white text-slate-500 border border-slate-200'}">\${labels[i-1]}</button>\`;
+                return `<button onclick="state.analyticsView=${i}; render();" class="px-5 py-2.5 rounded-2xl text-[14px] font-black shadow-sm transition-all whitespace-nowrap ${active ? 'bg-purple-500 text-white' : 'bg-white text-slate-500 border border-slate-200'}">${labels[i-1]}</button>`;
             }).join('')}
         </div>
         <div id="analytics-content">
-            \${renderAnalyticsContent()}
+            ${renderAnalyticsContent()}
         </div>
     `;
     return ht;
@@ -63,28 +63,28 @@ function viewAnalytics1_PieSubjects() {
         const degrees = (percent / 100) * 360;
         
         const color = subj ? subj.color : '#ccc';
-        conicParts.push(`\${color} \${currentDegree}deg \${currentDegree + degrees}deg`);
+        conicParts.push(`${color} ${currentDegree}deg ${currentDegree + degrees}deg`);
         currentDegree += degrees;
         
         legendHt += `<div class="flex items-center gap-3">
-            <div class="w-4 h-4 rounded-full" style="background-color: \${color}"></div>
-            <div class="flex-1 font-bold text-slate-700">\${subj?.name || 'Предмет'}</div>
-            <div class="font-black text-slate-400">\${percent.toFixed(1)}% (\${Math.round(mins/60)} ч)</div>
+            <div class="w-4 h-4 rounded-full" style="background-color: ${color}"></div>
+            <div class="flex-1 font-bold text-slate-700">${subj?.name || 'Предмет'}</div>
+            <div class="font-black text-slate-400">${percent.toFixed(1)}% (${Math.round(mins/60)} ч)</div>
         </div>`;
     });
     
-    const gradient = `conic-gradient(\${conicParts.join(', ')})`;
+    const gradient = `conic-gradient(${conicParts.join(', ')})`;
     
     return `<div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm max-w-2xl mx-auto flex flex-col md:flex-row gap-8 items-center">
-        <div class="relative w-48 h-48 rounded-full shadow-inner flex-shrink-0" style="background: \${gradient}">
+        <div class="relative w-48 h-48 rounded-full shadow-inner flex-shrink-0" style="background: ${gradient}">
             <div class="absolute inset-4 bg-white rounded-full shadow flex flex-col items-center justify-center">
                 <span class="text-xs font-bold text-slate-400 uppercase">Всего</span>
-                <span class="text-2xl font-black text-slate-800">\${Math.round(totalMins/60)} ч</span>
+                <span class="text-2xl font-black text-slate-800">${Math.round(totalMins/60)} ч</span>
             </div>
         </div>
         <div class="w-full space-y-3">
             <div class="font-black text-lg text-slate-800 border-b border-slate-100 pb-2 mb-4">Распределение по предметам</div>
-            \${legendHt}
+            ${legendHt}
         </div>
     </div>`;
 }
@@ -115,9 +115,9 @@ function viewAnalytics2_BarDays() {
         const color = mins > 240 ? 'bg-rose-400' : mins > 120 ? 'bg-amber-400' : 'bg-blue-400';
         
         ht += `<div class="flex-1 flex flex-col items-center gap-2 group">
-            <div class="font-black text-slate-400 text-xs sm:text-sm opacity-0 group-hover:opacity-100 transition-opacity">\${(mins/60).toFixed(1)}ч</div>
-            <div class="w-full \${color} rounded-t-xl transition-all duration-500 hover:brightness-110" style="height: \${height}%"></div>
-            <div class="font-black text-slate-600 text-sm sm:text-base uppercase">\${day}</div>
+            <div class="font-black text-slate-400 text-xs sm:text-sm opacity-0 group-hover:opacity-100 transition-opacity">${(mins/60).toFixed(1)}ч</div>
+            <div class="w-full ${color} rounded-t-xl transition-all duration-500 hover:brightness-110" style="height: ${height}%"></div>
+            <div class="font-black text-slate-600 text-sm sm:text-base uppercase">${day}</div>
         </div>`;
     });
         
@@ -151,19 +151,19 @@ function viewAnalytics3_Teachers() {
         
         ht += `<div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
             <div class="w-12 h-12 bg-indigo-50 text-indigo-500 rounded-full flex justify-center items-center font-black text-xl mb-4">
-                \${tInfo.name.charAt(0).toUpperCase()}
+                ${tInfo.name.charAt(0).toUpperCase()}
             </div>
-            <div class="font-black text-lg text-slate-800 mb-1">\${tInfo.name}</div>
-            <div class="text-sm font-bold text-slate-400 mb-4">\${tInfo.phone ? tInfo.phone : 'Без телефона'}</div>
+            <div class="font-black text-lg text-slate-800 mb-1">${tInfo.name}</div>
+            <div class="text-sm font-bold text-slate-400 mb-4">${tInfo.phone ? tInfo.phone : 'Без телефона'}</div>
             
             <div class="space-y-2 border-t border-slate-100 pt-3">
                 <div class="flex justify-between items-center text-sm font-bold">
                     <span class="text-slate-500">Занятий:</span>
-                    <span class="text-slate-800 bg-slate-100 px-2 py-0.5 rounded-lg">\${st.count}</span>
+                    <span class="text-slate-800 bg-slate-100 px-2 py-0.5 rounded-lg">${st.count}</span>
                 </div>
                 <div class="flex justify-between items-center text-sm font-bold">
                     <span class="text-slate-500">Минут:</span>
-                    <span class="text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg">\${st.mins}</span>
+                    <span class="text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg">${st.mins}</span>
                 </div>
             </div>
         </div>`;
@@ -190,7 +190,7 @@ function viewAnalytics4_Finance() {
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
             </div>
             <div class="text-slate-500 font-bold uppercase text-xs tracking-wider mb-1">Доходы</div>
-            <div class="font-black text-2xl text-emerald-600">\${fmtNum(income)}</div>
+            <div class="font-black text-2xl text-emerald-600">${fmtNum(income)}</div>
         </div>
         
         <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center">
@@ -198,7 +198,7 @@ function viewAnalytics4_Finance() {
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
             </div>
             <div class="text-slate-500 font-bold uppercase text-xs tracking-wider mb-1">Расходы</div>
-            <div class="font-black text-2xl text-rose-600">\${fmtNum(expenses)}</div>
+            <div class="font-black text-2xl text-rose-600">${fmtNum(expenses)}</div>
         </div>
         
         <div class="bg-slate-800 p-6 rounded-3xl shadow-lg flex flex-col items-center justify-center text-center">
@@ -206,7 +206,7 @@ function viewAnalytics4_Finance() {
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
             </div>
             <div class="text-slate-400 font-bold uppercase text-xs tracking-wider mb-1">Баланс</div>
-            <div class="font-black text-2xl \${balance >= 0 ? 'text-emerald-400' : 'text-rose-400'}">\${fmtNum(balance)}</div>
+            <div class="font-black text-2xl ${balance >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${fmtNum(balance)}</div>
         </div>
     </div>`;
 }
@@ -220,19 +220,19 @@ function viewAnalytics5_Summary() {
     return `<div class="max-w-4xl mx-auto space-y-6">
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm text-center">
-                <div class="text-4xl font-black text-slate-800 mb-1">\${(totalMins/60).toFixed(0)}</div>
+                <div class="text-4xl font-black text-slate-800 mb-1">${(totalMins/60).toFixed(0)}</div>
                 <div class="text-xs font-bold text-slate-400 uppercase">Часов учебы</div>
             </div>
             <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm text-center">
-                <div class="text-4xl font-black text-blue-500 mb-1">\${totalTeachers}</div>
+                <div class="text-4xl font-black text-blue-500 mb-1">${totalTeachers}</div>
                 <div class="text-xs font-bold text-slate-400 uppercase">Преподавателей</div>
             </div>
             <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm text-center">
-                <div class="text-4xl font-black text-amber-500 mb-1">\${totalTasks}</div>
+                <div class="text-4xl font-black text-amber-500 mb-1">${totalTasks}</div>
                 <div class="text-xs font-bold text-slate-400 uppercase">Активных задач</div>
             </div>
             <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm text-center">
-                <div class="text-4xl font-black text-emerald-500 mb-1">\${state.finances.length}</div>
+                <div class="text-4xl font-black text-emerald-500 mb-1">${state.finances.length}</div>
                 <div class="text-xs font-bold text-slate-400 uppercase">Транзакций</div>
             </div>
         </div>

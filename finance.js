@@ -1,4 +1,4 @@
-// ===================== FINANCE MODULE =====================
+﻿// ===================== FINANCE MODULE =====================
 function renderFinance() {
     let ht = `
         <div class="mb-4 flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
@@ -29,13 +29,13 @@ function renderFinance() {
         ht += `<tr class="hover:bg-slate-50 transition-colors">
             <td class="p-4">
                 <span class="bg-slate-100 text-slate-600 px-2 py-1 flex items-center gap-2 rounded-lg font-bold w-max">
-                    \${f.category}
+                    ${f.category}
                 </span>
             </td>
-            <td class="p-4 font-bold text-slate-700">\${f.subcategory}</td>
-            <td class="p-4 text-slate-500">\${f.month}</td>
-            <td class="p-4 font-black \${f.type === 'income' ? 'text-emerald-600' : 'text-rose-600'} text-right">
-                \${f.type === 'income' ? '+' : '-'}\${fmtNum(f.amount)}
+            <td class="p-4 font-bold text-slate-700">${f.subcategory}</td>
+            <td class="p-4 text-slate-500">${f.month}</td>
+            <td class="p-4 font-black ${f.type === 'income' ? 'text-emerald-600' : 'text-rose-600'} text-right">
+                ${f.type === 'income' ? '+' : '-'}${fmtNum(f.amount)}
             </td>
         </tr>`;
     });

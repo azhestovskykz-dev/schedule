@@ -1,4 +1,4 @@
-// ===================== SUBJECTS MODULE =====================
+﻿// ===================== SUBJECTS MODULE =====================
 function renderSubjects() {
     let ht = `
         <div class="mb-6 flex justify-between items-center max-w-4xl mx-auto">
@@ -14,9 +14,9 @@ function renderSubjects() {
     state.subjects.forEach(subj => {
         ht += `
         <div class="bg-white rounded-3xl p-5 border border-slate-200 shadow-[0_2px_10px_rgba(0,0,0,0.03)] hover:shadow-md transition-all group cursor-pointer relative overflow-hidden">
-            <div class="w-12 h-12 rounded-2xl mb-4 shadow-inner" style="background-color: \${subj.color}"></div>
-            <div class="font-black text-lg text-slate-800 leading-tight">\${subj.name}</div>
-            <div class="text-xs font-bold text-slate-400 mt-1 uppercase">ID: \${subj.id}</div>
+            <div class="w-12 h-12 rounded-2xl mb-4 shadow-inner" style="background-color: ${subj.color}"></div>
+            <div class="font-black text-lg text-slate-800 leading-tight">${subj.name}</div>
+            <div class="text-xs font-bold text-slate-400 mt-1 uppercase">ID: ${subj.id}</div>
             
             <div class="absolute inset-0 bg-slate-900/5 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                 <button class="w-10 h-10 bg-white text-indigo-600 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform">

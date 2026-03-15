@@ -1,4 +1,4 @@
-// ===================== TASKS MODULE =====================
+﻿// ===================== TASKS MODULE =====================
 
 function renderTasks() {
     let ht = `
@@ -6,11 +6,11 @@ function renderTasks() {
             ${[1,2,3,4,5].map(i => {
                 let active = state.tasksView === i;
                 let labels = ['1: Стандарт Канбан', '2: По приоритету', '3: По дням недели', '4: Карточки-списки', '5: Хронология'];
-                return \`<button onclick="state.tasksView=${i}; render();" class="px-5 py-2.5 rounded-2xl text-[14px] font-black shadow-sm transition-all whitespace-nowrap ${active ? 'bg-amber-500 text-white' : 'bg-white text-slate-500 border border-slate-200'}">\${labels[i-1]}</button>\`;
+                return `<button onclick="state.tasksView=${i}; render();" class="px-5 py-2.5 rounded-2xl text-[14px] font-black shadow-sm transition-all whitespace-nowrap ${active ? 'bg-amber-500 text-white' : 'bg-white text-slate-500 border border-slate-200'}">${labels[i-1]}</button>`;
             }).join('')}
         </div>
         <div id="tasks-content">
-            \${renderTasksContent()}
+            ${renderTasksContent()}
         </div>
     `;
     return ht;
@@ -35,10 +35,10 @@ function viewTasks1_Status() {
     
     let ht = `<div class="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4 scrollbar-hide">`;
     cols.forEach(col => {
-        ht += `<div class="flex-none w-[85%] md:w-[320px] snap-center \${col.color} rounded-3xl p-4 border border-slate-200">
-            <div class="font-black text-lg \${col.text} mb-4 flex justify-between items-center">
-                <span>\${col.name}</span>
-                <span class="bg-white px-2 py-0.5 rounded-lg text-sm">\${state.tasks.filter(t=>t.status===col.id).length}</span>
+        ht += `<div class="flex-none w-[85%] md:w-[320px] snap-center ${col.color} rounded-3xl p-4 border border-slate-200">
+            <div class="font-black text-lg ${col.text} mb-4 flex justify-between items-center">
+                <span>${col.name}</span>
+                <span class="bg-white px-2 py-0.5 rounded-lg text-sm">${state.tasks.filter(t=>t.status===col.id).length}</span>
             </div>
             <div class="space-y-3">`;
             
@@ -60,8 +60,8 @@ function viewTasks2_Priority() {
     
     let ht = `<div class="grid grid-cols-1 md:grid-cols-3 gap-6">`;
     cols.forEach(col => {
-        ht += `<div class="bg-white rounded-3xl p-4 border border-slate-200 border-t-4 \${col.border} shadow-sm">
-            <div class="font-black text-lg text-slate-700 mb-4">\${col.name} приоритет</div>
+        ht += `<div class="bg-white rounded-3xl p-4 border border-slate-200 border-t-4 ${col.border} shadow-sm">
+            <div class="font-black text-lg text-slate-700 mb-4">${col.name} приоритет</div>
             <div class="space-y-3">`;
         state.tasks.filter(t => t.priority === col.id).forEach(task => ht += buildTaskCard(task));
         ht += `</div></div>`;
@@ -76,7 +76,7 @@ function viewTasks3_Days() {
     DAYS.forEach(day => {
         const dTasks = state.tasks.filter(t => t.day === day);
         ht += `<div class="flex-none w-[280px] bg-slate-50/50 rounded-2xl p-3 border border-slate-100">
-            <div class="font-bold text-slate-500 uppercase text-center mb-3">\${day}</div>
+            <div class="font-bold text-slate-500 uppercase text-center mb-3">${day}</div>
             <div class="space-y-2">`;
         if (dTasks.length === 0) ht += `<div class="text-xs text-center text-slate-300 italic">Нет задач</div>`;
         dTasks.forEach(task => ht += buildTaskCard(task, true));
@@ -94,12 +94,12 @@ function viewTasks4_Compact() {
         const statColor = task.status==='done' ? 'text-emerald-500' : task.status==='inprogress' ? 'text-blue-500' : 'text-slate-400';
         ht += `<li class="p-4 hover:bg-slate-50 flex items-center justify-between gap-4 transition-colors">
             <div class="flex items-center gap-3">
-                <div class="\${statColor}">\${task.status==='done' ? '✓' : '○'}</div>
-                <div class="font-bold text-slate-700 \${task.status==='done' ? 'line-through opacity-50' : ''}">\${task.title}</div>
+                <div class="${statColor}">${task.status==='done' ? '✓' : '○'}</div>
+                <div class="font-bold text-slate-700 ${task.status==='done' ? 'line-through opacity-50' : ''}">${task.title}</div>
             </div>
             <div class="flex gap-2 text-xs font-bold">
-                <span class="bg-slate-100 text-slate-500 px-2 py-1 rounded-md">\${task.day}</span>
-                <span class="\${task.priority==='high'?'text-rose-500 bg-rose-50':'text-slate-500 bg-slate-50'} px-2 py-1 rounded-md">\${task.priority === 'high' ? 'Высокий' : 'Обычный'}</span>
+                <span class="bg-slate-100 text-slate-500 px-2 py-1 rounded-md">${task.day}</span>
+                <span class="${task.priority==='high'?'text-rose-500 bg-rose-50':'text-slate-500 bg-slate-50'} px-2 py-1 rounded-md">${task.priority === 'high' ? 'Высокий' : 'Обычный'}</span>
             </div>
         </li>`;
     });
@@ -115,7 +115,7 @@ function viewTasks5_Timeline() {
         if (dTasks.length === 0) return;
         ht += `<div>
             <div class="flex items-center gap-4 mb-3">
-                <div class="font-black text-xl text-slate-800 uppercase">\${day}</div>
+                <div class="font-black text-xl text-slate-800 uppercase">${day}</div>
                 <div class="h-px bg-slate-200 flex-1"></div>
             </div>
             <div class="pl-4 border-l-2 border-slate-100 space-y-3">`;
@@ -132,9 +132,9 @@ function buildTaskCard(task, compact=false) {
     
     return `<div class="bg-white p-3 rounded-xl shadow-sm border border-slate-100 cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98]">
         <div class="flex justify-between items-start mb-2">
-            <span class="text-[10px] font-black uppercase px-2 py-0.5 rounded flex items-center \${pDict[task.priority]}">\${pLabel[task.priority]}</span>
-            <span class="text-xs font-bold text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded">\${task.day}</span>
+            <span class="text-[10px] font-black uppercase px-2 py-0.5 rounded flex items-center ${pDict[task.priority]}">${pLabel[task.priority]}</span>
+            <span class="text-xs font-bold text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded">${task.day}</span>
         </div>
-        <div class="font-bold text-slate-700 text-sm leading-snug \${task.status==='done'?'line-through opacity-50':''}">\${task.title}</div>
+        <div class="font-bold text-slate-700 text-sm leading-snug ${task.status==='done'?'line-through opacity-50':''}">${task.title}</div>
     </div>`;
 }

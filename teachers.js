@@ -1,4 +1,4 @@
-// ===================== TEACHERS MODULE =====================
+﻿// ===================== TEACHERS MODULE =====================
 function renderTeachers() {
     let ht = `
         <div class="mb-6 flex justify-between items-center max-w-5xl mx-auto">
@@ -18,11 +18,11 @@ function renderTeachers() {
         <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-[0_2px_10px_rgba(0,0,0,0.03)] hover:shadow-md transition-all flex flex-col h-full bg-gradient-to-b from-white to-slate-50/50">
             <div class="flex gap-4 items-center mb-5">
                 <div class="w-14 h-14 bg-indigo-100 text-indigo-600 rounded-full flex justify-center items-center font-black text-2xl shadow-inner">
-                    \${t.name.charAt(0).toUpperCase()}
+                    ${t.name.charAt(0).toUpperCase()}
                 </div>
                 <div>
-                    <div class="font-black text-xl text-slate-800 leading-tight">\${t.name.split(' (')[0]}</div>
-                    <div class="text-xs font-bold text-slate-400 mt-1 uppercase tracking-widest">\${t.id}</div>
+                    <div class="font-black text-xl text-slate-800 leading-tight">${t.name.split(' (')[0]}</div>
+                    <div class="text-xs font-bold text-slate-400 mt-1 uppercase tracking-widest">${t.id}</div>
                 </div>
             </div>
             
@@ -31,19 +31,19 @@ function renderTeachers() {
                     <div class="w-8 h-8 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
                     </div>
-                    <div class="font-bold text-slate-700 text-sm">\${t.phone || 'Не указан'}</div>
+                    <div class="font-bold text-slate-700 text-sm">${t.phone || 'Не указан'}</div>
                 </div>
                 
                 <div class="flex items-center gap-3 p-3 bg-white rounded-2xl border border-slate-100">
                     <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
                     </div>
-                    <div class="font-bold text-slate-700 text-sm">\${t.platform || 'Лично'}</div>
+                    <div class="font-bold text-slate-700 text-sm">${t.platform || 'Лично'}</div>
                 </div>
             </div>
             
             <div class="mt-5 pt-4 border-t border-slate-200/60 flex justify-between items-center">
-                <div class="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-xl">\${t.cost} ₸ / час</div>
+                <div class="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-xl">${t.cost} ₸ / час</div>
                 
                 <div class="flex gap-2">
                     <button class="w-9 h-9 bg-white text-indigo-600 rounded-xl flex items-center justify-center border border-slate-200 hover:bg-slate-50 transition-colors">

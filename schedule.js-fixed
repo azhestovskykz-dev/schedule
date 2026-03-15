@@ -1,4 +1,4 @@
-﻿// ===================== SCHEDULE MODULE =====================
+// ===================== SCHEDULE MODULE =====================
 
 function renderSchedule() {
     let ht = `
