@@ -16,7 +16,7 @@ const TIMES = [
 ];
 
 // Settings from previous implementation
-const DEFAULT_SUBJECTS = ['Математика','Русский язык','Английский','Казахский','Литература'];
+const DEFAULT_SUBJECTS = ['Математика','Русский язык','Английский','Скорочтение','Логопедия'];
 
 // ===================== ICONS =====================
 const ICONS = {
@@ -66,18 +66,22 @@ function loadData() {
         } catch(e) { console.error('Error loading local data'); }
     } else {
         // Mock default data
-        state.subjects = DEFAULT_SUBJECTS.map((name, i) => ({
-            id: 's'+i, name, color: ['#ef4444','#f59e0b','#10b981','#3b82f6','#8b5cf6'][i%5]
-        }));
+        state.subjects = [
+            {id:'s0', name:'Математика', color:'#ef4444'},
+            {id:'s1', name:'Русский язык', color:'#10b981'},
+            {id:'s2', name:'Английский', color:'#eab308'},
+            {id:'s3', name:'Логопедия', color:'#0ea5e9'},
+            {id:'s4', name:'Калиграфия', color:'#a855f7'}
+        ];
         state.teachers = [
-            {id:'t1', name:'Иванова Анна', cost: 5000, phone:'+77001234567', platform:'Zoom', link:'https://zoom.us/j/123456'},
-            {id:'t2', name:'Петров Иван', cost: 4000, phone:'+77009876543', platform:'Google Meet', link:''}
+            {id:'t1', name:'Иванова Анна', cost: 5000, phone:'8 915 425 40-36', platform:'Telegram', link:'https://t.me/example'},
+            {id:'t2', name:'Петров Иван', cost: 4000, phone:'8916456 54-56', platform:'Zoom', link:''}
         ];
         
         const today = getTodayName();
         state.schedule[today] = {
             "10:00": [{ id:'b1', subjectId:'s0', teacherId:'t1', variant:'1', duration:60, isPaid: false }],
-            "15:00": [{ id:'b2', subjectId:'s2', teacherId:'t2', variant:'1', duration:90, isPaid: true, comment: 'Подготовиться к тесту' }]
+            "15:00": [{ id:'b2', subjectId:'s1', teacherId:'t2', variant:'1', duration:90, isPaid: true, comment: 'Подготовка к тесту' }]
         };
     }
     
@@ -123,6 +127,8 @@ function render() {
         area.innerHTML = renderWeekKanban();
     } else if (state.tab === 'week2') {
         area.innerHTML = renderWeek2Kanban();
+    } else if (state.tab === 'week3') {
+        area.innerHTML = renderWeek3Kanban();
     } else if (state.tab === 'analytics') {
         area.innerHTML = renderAnalytics();
     } else if (state.tab === 'settings') {
@@ -132,7 +138,7 @@ function render() {
 
 function updateNavUI() {
     // Update Top Nav
-    ['today', 'week', 'week2', 'analytics', 'settings'].forEach(t => {
+    ['today', 'week', 'week2', 'week3', 'analytics', 'settings'].forEach(t => {
         const btn = document.getElementById(`main-tab-${t}`);
         if(btn) {
             btn.className = `nav-btn t-${t}-${state.tab === t ? 'active' : 'inactive'} font-bold`;
@@ -309,6 +315,83 @@ function renderWeek2Kanban() {
                     </div>
                 </div>
                 <div class="flex-1">
+                    ${count > 0 ? rowsHtml : `<div class="text-sm text-center text-slate-400 p-4">Пусто</div>`}
+                </div>
+            </div>`;
+            return colHtml;
+        }).join('')}
+    </div>`;
+    
+    return html;
+}
+
+function renderWeek3Kanban() {
+    let html = `
+    <div class="kanban-container w-full px-2 lg:px-6 mx-auto">
+        ${DAYS.map(day => {
+            let count = 0;
+            let rowsHtml = '';
+            TIMES.forEach(time => {
+                const items = state.schedule[day][time] || [];
+                items.forEach(it => {
+                    count++;
+                    const sInfo = state.subjects.find(s => s.id === it.subjectId);
+                    const tInfo = state.teachers.find(t => t.id === it.teacherId);
+                    const color = sInfo ? sInfo.color : '#3b82f6';
+                    const params = `openActionModal('${day}','${time}','${it.id}')`;
+                    
+                    let phoneBase = '';
+                    let phoneLast4 = '';
+                    if (tInfo && tInfo.phone) {
+                        const m = tInfo.phone.match(/(.*?)(\d{2}[-\s]?\d{2})$/);
+                        if(m) {
+                            phoneBase = m[1];
+                            phoneLast4 = m[2];
+                        } else {
+                            phoneBase = tInfo.phone;
+                        }
+                    }
+
+                    rowsHtml += `
+                    <div class="mb-3 rounded-2xl p-1.5 cursor-pointer shadow-sm active:scale-[0.98] transition-transform" style="background-color: ${color};" onclick="${params}">
+                        <div class="flex justify-between items-start mb-1.5 px-2 pt-1 text-white">
+                            <span class="font-black text-lg uppercase tracking-wide truncate drop-shadow-md">${sInfo ? sInfo.name : 'Unknown'}</span>
+                            <span class="text-sm font-bold opacity-90 drop-shadow-md">${time}</span>
+                        </div>
+                        
+                        <div class="bg-white rounded-xl p-3 flex flex-col gap-1.5 border-2 border-transparent">
+                            ${tInfo && tInfo.phone ? `
+                            <div class="flex items-baseline whitespace-nowrap overflow-hidden text-slate-800 tracking-tight">
+                                <span class="text-[15px] font-bold mr-1.5">${phoneBase}</span>
+                                <span class="text-[26px] font-black leading-none drop-shadow-sm" style="color: ${color}">${phoneLast4}</span>
+                            </div>
+                            ` : `<div class="text-slate-500 font-bold">${tInfo ? tInfo.name : 'Unknown'}</div>`}
+                            
+                            <div class="flex items-center gap-3 text-[13px] font-bold mt-1">
+                                ${tInfo && (tInfo.platform === 'Telegram' || !tInfo.platform) ? `
+                                <span class="flex items-center gap-1.5 text-sky-500">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06-.01.24-.02.38z"/></svg>
+                                    Телеграмм
+                                </span>` : ''}
+                                ${tInfo && tInfo.platform === 'Zoom' ? `
+                                <span class="flex items-center gap-1.5 text-blue-600">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M4.5 7.5C4.5 6.12 5.62 5 7 5h10c1.38 0 2.5 1.12 2.5 2.5v9c0 1.38-1.12 2.5-2.5 2.5H7C5.62 16.5 4.5 15.38 4.5 14v-6.5zM17 9.5l4-3v11l-4-3v-5z"/></svg>
+                                    Zoom
+                                </span>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                    `;
+                });
+            });
+
+            const colHtml = `
+            <div class="kanban-column flex flex-col h-[calc(100vh-140px)] overflow-y-auto bg-white border-l border-r border-slate-100 px-1 py-4">
+                <div class="sticky top-0 z-10 bg-white pb-1 mb-4 border-b-4 border-slate-900 flex justify-between items-end px-3 pt-2">
+                    <span class="font-black text-[22px] text-slate-900 capitalize tracking-tight" style="font-family: 'Comic Sans MS', cursive, sans-serif;">${day}</span>
+                    <span class="font-black text-[26px] text-slate-900 leading-none">${count > 0 ? count : ''}</span>
+                </div>
+                <div class="flex-1 px-2">
                     ${count > 0 ? rowsHtml : `<div class="text-sm text-center text-slate-400 p-4">Пусто</div>`}
                 </div>
             </div>`;

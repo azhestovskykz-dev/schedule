@@ -45,6 +45,9 @@
 .t-week2-active       { background: #14b8a6 !important; color: #fff !important; box-shadow: 0 4px 12px rgba(20, 184, 166, 0.3); }
 .t-week2-inactive     { color: #14b8a6 !important; border: 1px solid #e2e8f0 !important; background: white; }
 
+.t-week3-active       { background: #ef4444 !important; color: #fff !important; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3); }
+.t-week3-inactive     { color: #ef4444 !important; border: 1px solid #e2e8f0 !important; background: white; }
+
 .t-analytics-active       { background: #8b5cf6 !important; color: #fff !important; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3); }
 .t-analytics-inactive     { color: #8b5cf6 !important; border: 1px solid #e2e8f0 !important; background: white; }
 
